@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ykstravels/view_model/view_model.dart';
+
 class Login extends StatefulWidget {
   const Login({super.key});
 
@@ -50,10 +51,7 @@ class _LoginState extends State<Login> {
               const SizedBox(height: 6),
               Text(
                 "Sign in to continue",
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey.shade600,
-                ),
+                style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
               ),
 
               SizedBox(height: size.height * 0.04),
@@ -69,8 +67,9 @@ class _LoginState extends State<Login> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                validator: (value) =>
-                    value == null || value.isEmpty ? "Please enter your email" : null,
+                validator: (value) => value == null || value.isEmpty
+                    ? "Please enter your email"
+                    : null,
               ),
 
               const SizedBox(height: 16),
@@ -87,10 +86,9 @@ class _LoginState extends State<Login> {
                   ),
                 ),
                 obscureText: true,
-                validator: (value) =>
-                    value == null || value.length < 8
-                        ? "Password must be at least 8 characters"
-                        : null,
+                validator: (value) => value == null || value.length < 8
+                    ? "Password must be at least 8 characters"
+                    : null,
               ),
 
               SizedBox(height: size.height * 0.04),
@@ -104,18 +102,18 @@ class _LoginState extends State<Login> {
                     if (formGlobalKey.currentState!.validate()) {
                       viewModel
                           .loginwithemailandpassword(
-                        emailTextController.text.trim(),
-                        passwordTextController.text.trim(),
-                      )
+                            emailTextController.text.trim(),
+                            passwordTextController.text.trim(),
+                          )
                           .then((value) {
-                        if (value == "true") {
-                          Navigator.pushNamed(context, '/home');
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(value)),
-                          );
-                        }
-                      });
+                            if (value == "true") {
+                              Navigator.pushReplacementNamed(context, '/home');
+                            } else {
+                              ScaffoldMessenger.of(
+                                context,
+                              ).showSnackBar(SnackBar(content: Text(value)));
+                            }
+                          });
                     }
                   },
                   style: ElevatedButton.styleFrom(
@@ -131,6 +129,59 @@ class _LoginState extends State<Login> {
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
                       color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // OR separator
+              Row(
+                children: [
+                  Expanded(child: Divider(color: Colors.grey.shade400)),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Text(
+                      "OR",
+                      style: TextStyle(color: Colors.grey.shade600),
+                    ),
+                  ),
+                  Expanded(child: Divider(color: Colors.grey.shade400)),
+                ],
+              ),
+
+              const SizedBox(height: 20),
+
+              // Google Sign In Button
+              SizedBox(
+                width: double.infinity,
+                height: 55,
+                child: OutlinedButton.icon(
+                  icon: Icon(Icons.g_mobiledata, size: 24, color: Colors.red),
+                  label: const Text(
+                    "Continue with Google",
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  onPressed: () {
+                    viewModel.signInWithGoogle().then((value) {
+                      if (value == "true") {
+                        Navigator.pushReplacementNamed(context, '/home');
+                      } else {
+                        ScaffoldMessenger.of(
+                          context,
+                        ).showSnackBar(SnackBar(content: Text(value)));
+                      }
+                    });
+                  },
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(color: Colors.grey.shade300),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                 ),

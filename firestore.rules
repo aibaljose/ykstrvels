@@ -1,0 +1,23 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow public read access to all documents
+    match /{document=**} {
+      allow read: if true;
+    }
+    
+    // Allow write access to trips collection and subcollections
+    match /trips/{tripId} {
+      allow write: if true;
+      
+      match /stories/{storyId} {
+        allow write: if true;
+      }
+    }
+    
+    // Allow write access to users collection
+    match /users/{userId} {
+      allow write: if true;
+    }
+  }
+}

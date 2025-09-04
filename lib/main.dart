@@ -1,28 +1,28 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'signup.dart';
 import "login.dart";
 import "splashscreen.dart";
 import 'package:firebase_core/firebase_core.dart';
- // ✅ Added import
- import "home.dart";
+import "home.dart";
+import "itinerary.dart";
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-    SystemChrome.setSystemUIOverlayStyle(
+  SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
-      statusBarColor: Color.fromARGB(255, 255, 255, 255), // background color of status bar
+      statusBarColor: Color.fromARGB(
+        255,
+        255,
+        255,
+        255,
+      ), // background color of status bar
       statusBarIconBrightness: Brightness.light, // white icons
     ),
   );
   runApp(const MyApp());
-
-
-
 }
-
-
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -30,16 +30,15 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'YKSTRAVELS',
-            debugShowCheckedModeBanner: false,
+      debugShowCheckedModeBanner: false,
 
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      
+      theme: ThemeData(primarySwatch: Colors.blue),
+
       routes: {
         '/signup': (context) => const Signup(),
         '/login': (context) => const Login(),
         '/home': (context) => const TravelStoriesPage(),
+        '/itinerary': (context) => const ItineraryPage(),
       },
       home: const SplashScreen(),
     );
