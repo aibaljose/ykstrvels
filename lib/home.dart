@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:ykstravels/package.dart'; // Add this import
 import 'view_model/view_model.dart' as view_model;
 
 class TravelStoriesPage extends StatefulWidget {
@@ -71,14 +72,14 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
         return false;
       },
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0xFFfdfdfd),
         body: SafeArea(
           child: _isLoading ? _buildLoadingIndicator() : _buildPageContent(),
         ),
         bottomNavigationBar: _buildBottomNavBar(),
         floatingActionButton: FloatingActionButton(
           onPressed: () {},
-          backgroundColor: Colors.green.shade400,
+          backgroundColor: const Color.fromARGB(255, 57, 43, 43),
           child: const Icon(Icons.add, color: Colors.white),
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
@@ -156,20 +157,56 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
             ],
           ),
         ),
-
+ Padding(
+  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+  child: Container(
+    decoration: BoxDecoration(
+      color: Colors.grey.shade100,
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(
+        color: Colors.grey.shade300, // light grey border
+        width: 1.0,
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.05),
+          blurRadius: 8,
+          offset: const Offset(0, 2),
+        ),
+      ],
+    ),
+    child: TextField(
+      decoration: InputDecoration(
+        hintText: 'Search destination...',
+        prefixIcon: Icon(Icons.search, color: Colors.blue.shade400),
+        border: InputBorder.none, // remove TextField’s own border
+        contentPadding: const EdgeInsets.symmetric(vertical: 16),
+      ),
+      onChanged: (value) {
+        // TODO: Implement search/filter logic
+      },
+    ),
+  ),
+),
+    const SizedBox(height: 20),
         // Tab selector
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
           child: Row(
             children: [
-              _buildTabButton('FRIENDS', 0, selectedTab == 0),
+              _buildTabButton('Kerala', 0, selectedTab == 0),
               const SizedBox(width: 12),
-              _buildTabButton('TRAVELLERS', 1, selectedTab == 1),
+              _buildTabButton('Dubai', 1, selectedTab == 1),
+              const SizedBox(width: 12),
+              _buildTabButton('Rajasthan', 2, selectedTab == 2),
             ],
           ),
         ),
 
         const SizedBox(height: 20),
+
+        // Search bar
+      
 
         // Stories list
         Expanded(
@@ -200,6 +237,10 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
                                       isNetworkImage:
                                           story.imageUrl != null &&
                                           story.imageUrl!.isNotEmpty,
+                                      description: story.description ?? '',
+                                      location:
+                                          story.location ??
+                                          '', // <-- Pass location from ViewModel
                                     ),
                                   )
                                   .toList() ??
@@ -264,7 +305,31 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
   }) {
     return GestureDetector(
       onTap: () {
-        Navigator.pushReplacementNamed(context, '/itinerary');
+        // Use first story for details, or fallback if none
+        final story = stories.isNotEmpty
+            ? stories[0]
+            : StoryData(
+                title: 'No Title',
+                subtitle: 'No Content',
+                image:
+                    'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80',
+                isNetworkImage: true,
+              );
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => PackageDetailPage(
+              imageUrl: story.image,
+              title: title,
+              location: host,
+              price: 154, // You can add price to your model for dynamic value
+              rating: 5.0, // Add rating to your model for dynamic value
+              reviews: 12, // Add reviews to your model for dynamic value
+              description: story.subtitle, // Use story content as description
+            ),
+          ),
+        );
       },
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -323,111 +388,129 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
   }
 
   Widget _buildStoryCard(StoryData story) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          // Background image
-          Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              image: DecorationImage(
-                image: _getImageProvider(story),
-                fit: BoxFit.cover,
-              ),
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => PackageDetailPage(
+              imageUrl: story.image,
+              title: story.title,
+              location: story.location, // You can pass trip.host if needed
+              price: 154,
+              rating: 5.0,
+              reviews: 12,
+              description: story.description, // Use content instead of subtitle
             ),
           ),
-
-          // Content overlay
-          Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Colors.transparent, Colors.black.withOpacity(0.7)],
+        );
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Stack(
+          children: [
+            // Background image
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                image: DecorationImage(
+                  image: _getImageProvider(story),
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
-          ),
 
-          // Heart icon
-          Positioned(
-            top: 8,
-            right: 8,
-            child: Container(
-              width: 32,
-              height: 32,
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.favorite_border,
-                color: Colors.grey.shade600,
-                size: 16,
+            // Content overlay
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Colors.transparent, Colors.black.withOpacity(0.7)],
+                ),
               ),
             ),
-          ),
 
-          // Video icon
-          if (story.isVideo)
+            // Heart icon
             Positioned(
               top: 8,
-              left: 8,
+              right: 8,
               child: Container(
                 width: 32,
                 height: 32,
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.5),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
-                  Icons.play_arrow,
-                  color: Colors.white,
+                child: Icon(
+                  Icons.favorite_border,
+                  color: Colors.grey.shade600,
                   size: 16,
                 ),
               ),
             ),
 
-          // Title and subtitle
-          Positioned(
-            bottom: 12,
-            left: 12,
-            right: 12,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  story.title,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
+            // Video icon
+            if (story.isVideo)
+              Positioned(
+                top: 8,
+                left: 8,
+                child: Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.5),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.play_arrow,
                     color: Colors.white,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  story.subtitle,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.white.withOpacity(0.8),
+                    size: 16,
                   ),
                 ),
-              ],
+              ),
+
+            // Title and subtitle
+            Positioned(
+              bottom: 12,
+              left: 12,
+              right: 12,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    story.title,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    story.subtitle,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.white.withOpacity(0.8),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -713,6 +796,8 @@ class StoryData {
   final String image;
   final bool isNetworkImage;
   final bool isVideo;
+  final String description;
+  final String location;
 
   StoryData({
     required this.title,
@@ -720,5 +805,7 @@ class StoryData {
     required this.image,
     this.isNetworkImage = false,
     this.isVideo = false,
+    this.description = '',
+    this.location = '',
   });
 }

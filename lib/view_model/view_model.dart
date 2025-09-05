@@ -21,9 +21,17 @@ class HomeDataModel {
 class StoryData {
   String? storyTitle;
   String? storyContent;
+  String? description;
   String? imageUrl;
+  String? location; // <-- Add this field
 
-  StoryData({this.storyTitle, this.storyContent, this.imageUrl});
+  StoryData({
+    this.storyTitle,
+    this.storyContent,
+    this.imageUrl,
+    this.description,
+    this.location,
+  });
 }
 
 class ViewModel {
@@ -68,7 +76,10 @@ class ViewModel {
     }
   }
 
-  Future<String> loginwithemailandpassword(String email, String password) async {
+  Future<String> loginwithemailandpassword(
+    String email,
+    String password,
+  ) async {
     try {
       final userCredential = await FirebaseAuth.instance
           .signInWithEmailAndPassword(email: email, password: password);
@@ -237,7 +248,9 @@ class ViewModel {
           return StoryData(
             storyTitle: data['title'] ?? '',
             storyContent: data['subtitle'] ?? '',
+            description: data['content'] ?? '',
             imageUrl: data['imageUrl'] ?? '',
+            location: data['location'] ?? '', // <-- Add this line
           );
         }).toList();
 
