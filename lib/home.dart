@@ -194,11 +194,11 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
           child: Row(
             children: [
-              _buildTabButton('Kerala', 0, selectedTab == 0),
+              _buildTabButton('India', 0, selectedTab == 0),
               const SizedBox(width: 12),
               _buildTabButton('Dubai', 1, selectedTab == 1),
               const SizedBox(width: 12),
-              _buildTabButton('Rajasthan', 2, selectedTab == 2),
+              _buildTabButton('Japan', 2, selectedTab == 2),
             ],
           ),
         ),
@@ -673,34 +673,160 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
   }
 
   // Events tab content
-  Widget _buildEventsContent() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.event, size: 80, color: Colors.blue.shade300),
-          const SizedBox(height: 16),
-          Text(
-            'Events',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey.shade800,
-            ),
+Widget _buildEventsContent() {
+  // Local event data
+  final events = [
+    {
+      "title": "Heart of Majestic Forests",
+      "location": "Norway's",
+      "imageUrl": "https://picsum.photos/400/250"
+    },
+    {
+      "title": "Sunny Beach Escape",
+      "location": "Maldives",
+      "imageUrl": "https://picsum.photos/400/251"
+    },
+    {
+      "title": "Sunny Beach Escape",
+      "location": "Maldives",
+      "imageUrl": "https://picsum.photos/400/251"
+    },
+    {
+      "title": "Sunny Beach Escape",
+      "location": "Maldives",
+      "imageUrl": "https://picsum.photos/400/251"
+    },
+    {
+      "title": "Sunny Beach Escape",
+      "location": "Maldives",
+      "imageUrl": "https://picsum.photos/400/251"
+    },
+    {
+      "title": "Sunny Beach Escape",
+      "location": "Maldives",
+      "imageUrl": "https://picsum.photos/400/251"
+    },
+    {
+      "title": "Sunny Beach Escape",
+      "location": "Maldives",
+      "imageUrl": "https://picsum.photos/400/251"
+    },
+    {
+      "title": "Sunny Beach Escape",
+      "location": "Maldives",
+      "imageUrl": "https://picsum.photos/400/251"
+    },
+    {
+      "title": "Sunny Beach Escape",
+      "location": "Maldives",
+      "imageUrl": "https://picsum.photos/400/251"
+    },
+    {
+      "title": "Sunny Beach Escape",
+      "location": "Maldives",
+      "imageUrl": "https://picsum.photos/400/251"
+    },
+    {
+      "title": "Sunny Beach Escape",
+      "location": "Maldives",
+      "imageUrl": "https://picsum.photos/400/251"
+    },
+  ];
+
+  return ListView.builder(
+    padding: const EdgeInsets.all(12),
+    itemCount: events.length,
+    itemBuilder: (context, index) {
+      final event = events[index];
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8.0),
+        child: _buildEventCard(
+          event['title']!,
+          event['location']!,
+          event['imageUrl']!,
+        ),
+      );
+    },
+  );
+}
+
+Widget _buildEventCard(String title, String location, String imageUrl) {
+  return Card(
+    elevation: 4,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(16),
+    ),
+    clipBehavior: Clip.antiAlias,
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Image
+        ClipRRect(
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(16),
+            topRight: Radius.circular(16),
           ),
-          const SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32.0),
-            child: Text(
-              'Upcoming travel events and activities',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey.shade600),
-            ),
+          child: Image.network(
+            imageUrl,
+            height: 200,
+            width: double.infinity,
+            fit: BoxFit.cover,
           ),
-        ],
-      ),
-    );
-  }
+        ),
+
+        // Text + Button
+        Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey.shade800,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        const Icon(Icons.location_on,
+                            size: 16, color: Colors.grey),
+                        const SizedBox(width: 4),
+                        Text(
+                          location,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                decoration: const BoxDecoration(
+                  color: Colors.yellow,
+                  shape: BoxShape.circle,
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.arrow_outward),
+                  onPressed: () {},
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
 
   // Profile tab content
   Widget _buildProfileContent() {

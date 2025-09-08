@@ -200,32 +200,32 @@ class _PackageDetailPageState extends State<PackageDetailPage>
                           ),
                         ],
                       ),
-                      const SizedBox(height: 18),
-                      // Avatars and reviews (mocked)
-                      Row(
-                        children: [
-                          ...List.generate(
-                            3,
-                            (i) => Padding(
-                              padding: EdgeInsets.only(right: i == 2 ? 8 : 0),
-                              child: CircleAvatar(
-                                radius: 14,
-                                backgroundImage: NetworkImage(
-                                  'https://randomuser.me/api/portraits/men/${30 + i}.jpg',
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '+${widget.reviews} People Reviewed',
-                            style: const TextStyle(
-                              fontSize: 13,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
+                      // const SizedBox(height: 18),
+                      // // Avatars and reviews (mocked)
+                      // Row(
+                      //   children: [
+                      //     ...List.generate(
+                      //       3,
+                      //       (i) => Padding(
+                      //         padding: EdgeInsets.only(right: i == 2 ? 8 : 0),
+                      //         child: CircleAvatar(
+                      //           radius: 14,
+                      //           backgroundImage: NetworkImage(
+                      //             'https://randomuser.me/api/portraits/men/${30 + i}.jpg',
+                      //           ),
+                      //         ),
+                      //       ),
+                      //     ),
+                      //     const SizedBox(width: 4),
+                      //     Text(
+                      //       '+${widget.reviews} People Reviewed',
+                      //       style: const TextStyle(
+                      //         fontSize: 13,
+                      //         color: AppColors.textSecondary,
+                      //       ),
+                      //     ),
+                      //   ],
+                      // ),
                       const SizedBox(height: 18),
                       // Tabs
                       Row(
@@ -322,7 +322,9 @@ class _PackageDetailPageState extends State<PackageDetailPage>
                             ),
                             padding: const EdgeInsets.symmetric(vertical: 16),
                           ),
-                          onPressed: () {},
+                          onPressed: () {
+                            Navigator.pushNamed(context, '/itinerary');
+                          },
                           child: const Text(
                             'Travel plan',
                             style: TextStyle(

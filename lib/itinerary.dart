@@ -8,104 +8,73 @@ class ItineraryPage extends StatefulWidget {
 }
 
 class _ItineraryPageState extends State<ItineraryPage> {
-  // Current selected card index
   int _selectedIndex = -1;
 
-  // List of card data
   final List<ItineraryCardData> _cardData = [
     ItineraryCardData(
-      title: 'BEFORE YOU FLY',
-      color: Colors.blue.shade700,
+      title: 'Before You Fly',
       icon: Icons.flight_takeoff,
+      color: Colors.blue.shade600,
       content: [
-        'Check your passport validity (minimum 6 months)',
-        'Confirm your flight details and check-in online',
+        'Check passport validity (min 6 months)',
+        'Confirm flight details & check-in online',
         'Purchase travel insurance',
         'Notify your bank of travel plans',
         'Make copies of important documents',
-        'Exchange currency or arrange for a travel card',
-        'Check weather forecast at your destination',
+        'Exchange currency or arrange travel card',
+        'Check weather forecast',
         'Confirm hotel reservations',
       ],
     ),
     ItineraryCardData(
-      title: 'THINGS TO KNOW',
-      color: Colors.purple.shade700,
-      icon: Icons.lightbulb_outline,
+      title: 'Things To Know',
+      icon: Icons.info_outline,
+      color: Colors.indigo.shade400,
       content: [
         'Local emergency numbers: 911',
         'Embassy contact: +1-555-123-4567',
         'Local language: English',
-        'Currency: USD (1 USD = approx. 0.85 EUR)',
-        'Time zone: UTC-5 (Eastern Standard Time)',
-        'Tipping: 15-20% for services',
-        'Tap water is generally safe to drink',
-        'Public transportation options: Subway, buses, rideshare services',
+        'Currency: USD',
+        'Time zone: UTC-5',
+        'Tipping: 15-20%',
+        'Tap water is safe',
+        'Public transport: Subway, buses, rideshare',
       ],
     ),
     ItineraryCardData(
-      title: 'ITINERARY',
-      color: Colors.green.shade700,
+      title: 'Itinerary: Munnar',
       icon: Icons.map_outlined,
+      color: Colors.green.shade400,
       content: [
-        'Day 1: Arrival & Hotel Check-in',
-        '• 2:30 PM: Flight arrival at JFK Airport',
-        '• 4:00 PM: Check-in at Grand Central Hotel',
-        '• 7:00 PM: Welcome dinner at Skyline Restaurant',
-        'Day 2: City Exploration',
-        '• 9:00 AM: Breakfast at hotel',
-        '• 10:30 AM: Guided city tour',
-        '• 1:00 PM: Lunch at Harbor View Café',
-        '• 3:00 PM: Museum visit',
-        '• 7:30 PM: Dinner cruise',
-        'Day 3: Day Trip',
-        '• 8:00 AM: Breakfast',
-        '• 9:30 AM: Depart for mountain excursion',
-        '• 12:30 PM: Picnic lunch',
-        '• 5:00 PM: Return to hotel',
-        '• 7:00 PM: Dinner at local restaurant',
+        // We'll use a custom widget for this card in the detail view
+        // So keep this content list empty or with a placeholder
       ],
     ),
     ItineraryCardData(
-      title: 'BUDGET & TRAVEL TIPS',
-      color: Colors.orange.shade700,
+      title: 'Budget & Tips',
       icon: Icons.account_balance_wallet_outlined,
+      color: Colors.orange.shade400,
       content: [
-        'Estimated Budget:',
-        '• Accommodation: \$150-200 per night',
-        '• Meals: \$50-80 per day',
-        '• Transportation: \$30 per day',
-        '• Activities: \$200 total',
-        '• Shopping & Souvenirs: \$100-200',
-        'Money-Saving Tips:',
-        '• Buy a city attraction pass',
-        '• Use public transportation',
-        '• Look for "prix fixe" lunch menus',
-        '• Carry a water bottle',
-        '• Check for free museum days',
+        'Accommodation: \$150-200/night',
+        'Meals: \$50-80/day',
+        'Transport: \$30/day',
+        'Activities: \$200 total',
+        'Tips: Use public transport, city passes, free museum days',
       ],
     ),
     ItineraryCardData(
-      title: 'PACKING LIST',
-      color: Colors.red.shade700,
+      title: 'Packing List',
       icon: Icons.luggage_outlined,
+      color: Colors.red.shade400,
       content: [
-        'Essentials:',
-        '• Passport and ID',
-        '• Flight tickets/confirmations',
-        '• Credit cards and cash',
-        '• Phone and charger',
-        '• Medications',
-        'Clothing:',
-        '• Weather-appropriate outfits',
-        '• Comfortable walking shoes',
-        '• Sleepwear',
-        '• Formal outfit for nice restaurants',
-        'Toiletries:',
-        '• Toothbrush and toothpaste',
-        '• Shampoo and conditioner',
-        '• Sunscreen',
-        '• Personal hygiene items',
+        'Passport & ID',
+        'Flight tickets',
+        'Credit cards & cash',
+        'Phone & charger',
+        'Medications',
+        'Weather-appropriate clothes',
+        'Comfortable shoes',
+        'Toiletries',
       ],
     ),
   ];
@@ -117,202 +86,190 @@ class _ItineraryPageState extends State<ItineraryPage> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        title: Text(
-          'Travel Planner',
-          style: TextStyle(
-            color: Colors.grey.shade800,
-            fontWeight: FontWeight.bold,
-          ),
+        title: const Text(
+          'Travel Planning',
+          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
         ),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.grey.shade800),
-          onPressed: () {
-            Navigator.pushReplacementNamed(context, '/home');
-          },
+          icon: const Icon(Icons.arrow_back, color: Colors.black87),
+          onPressed: () => Navigator.pushReplacementNamed(context, '/home'),
         ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.search, color: Colors.grey.shade800),
-            onPressed: () {},
-          ),
-        ],
       ),
-      body: _selectedIndex >= 0 ? _buildDetailView() : _buildCardsGridView(),
+      body: _selectedIndex == -1
+          ? _buildCardsGridView(context)
+          : _buildDetailView(context, _selectedIndex),
     );
   }
 
-  Widget _buildCardsGridView() {
-    // Use LayoutBuilder to make the design responsive
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // Calculate the optimal number of columns based on screen width
-        final double width = constraints.maxWidth;
-        final int crossAxisCount = width > 700 ? 2 : 1;
+  Widget _buildCardsGridView(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    final crossAxisCount = width > 700 ? 2 : 1;
 
-        return SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Travel Planning',
-                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Everything you need for your trip',
-                style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
-              ),
-              const SizedBox(height: 24),
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: crossAxisCount,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                  childAspectRatio: 1.4,
-                ),
-                itemCount: _cardData.length,
-                itemBuilder: (context, index) {
-                  return _buildCard(index);
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildCard(int index) {
-    final card = _cardData[index];
-
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedIndex = index;
-        });
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: card.color.withOpacity(0.2),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: GridView.builder(
+        itemCount: _cardData.length,
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: crossAxisCount,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+          childAspectRatio: 1.6,
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Card header
-            Container(
-              padding: const EdgeInsets.all(16),
+        itemBuilder: (context, index) {
+          final card = _cardData[index];
+          return GestureDetector(
+            onTap: () => setState(() => _selectedIndex = index),
+            child: Container(
               decoration: BoxDecoration(
-                color: card.color,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(16),
-                  topRight: Radius.circular(16),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Icon(card.icon, color: Colors.white, size: 24),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      card.title,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: [
+                  BoxShadow(
+                    color: card.color.withOpacity(0.08),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
                   ),
                 ],
               ),
-            ),
-            // Card preview content
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${card.content.length} items',
-                      style: TextStyle(
-                        color: Colors.grey.shade600,
-                        fontSize: 14,
-                      ),
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(card.icon, color: card.color, size: 32),
+                  const SizedBox(height: 12),
+                  Text(
+                    card.title,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: card.color,
                     ),
-                    const SizedBox(height: 8),
-                    // Show first 2 items as preview
-                    ...card.content
-                        .take(2)
-                        .map(
-                          (item) => Padding(
-                            padding: const EdgeInsets.only(bottom: 4),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Icon(
-                                  Icons.check_circle_outline,
-                                  color: card.color.withOpacity(0.7),
-                                  size: 16,
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    item,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.grey.shade800,
-                                    ),
-                                  ),
-                                ),
-                              ],
+                  ),
+                  const SizedBox(height: 10),
+                  ...card.content
+                      .take(2)
+                      .map(
+                        (item) => Padding(
+                          padding: const EdgeInsets.only(bottom: 4),
+                          child: Text(
+                            '• $item',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.black87,
                             ),
-                          ),
-                        )
-                        ,
-                    if (card.content.length > 2)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4),
-                        child: Text(
-                          '+ ${card.content.length - 2} more',
-                          style: TextStyle(
-                            color: card.color,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
                           ),
                         ),
                       ),
-                  ],
-                ),
+                  if (card.content.length > 2)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Text(
+                        '+${card.content.length - 2} more',
+                        style: TextStyle(
+                          color: card.color,
+                          fontWeight: FontWeight.w500,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
 
-  Widget _buildDetailView() {
-    final card = _cardData[_selectedIndex];
+  Widget _buildDetailView(BuildContext context, int index) {
+    final card = _cardData[index];
+
+    // Custom timeline for "Itinerary: Munnar"
+    if (card.title.startsWith('Itinerary')) {
+      return ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          _dayTimeline(
+            dayTitle: "Day 1, 10 Mar 2025",
+            activities: [
+              TimelineActivity(
+                icon: Icons.flight_land,
+                title: "Arrive at Kochi Airport",
+                time: "09:00 AM",
+              ),
+              TimelineActivity(
+                icon: Icons.hotel,
+                title: "Hotel Check In",
+                time: "11:00 AM",
+              ),
+              TimelineActivity(
+                icon: Icons.restaurant,
+                title: "Lunch at Saravana Bhavan",
+                time: "01:30 PM",
+                actionLabel: "View directions",
+                onAction: () {},
+              ),
+              TimelineActivity(
+                icon: Icons.nature,
+                title: "Visit Tea Gardens",
+                time: "04:00 PM",
+              ),
+              TimelineActivity(
+                icon: Icons.dinner_dining,
+                title: "Dinner at Rapsy Restaurant",
+                time: "08:00 PM",
+              ),
+            ],
+          ),
+          _dayTimeline(
+            dayTitle: "Day 2, 11 Mar 2025",
+            activities: [
+              TimelineActivity(
+                icon: Icons.breakfast_dining,
+                title: "Breakfast at Hotel",
+                time: "09:00 AM",
+              ),
+              TimelineActivity(
+                icon: Icons.park,
+                title: "Explore Eravikulam National Park",
+                time: "11:00 AM",
+              ),
+              TimelineActivity(
+                icon: Icons.shopping_bag,
+                title: "Shopping at Local Market",
+                time: "03:00 PM",
+              ),
+              TimelineActivity(
+                icon: Icons.dinner_dining,
+                title: "Dinner at Hotel",
+                time: "08:00 PM",
+              ),
+            ],
+          ),
+          _dayTimeline(
+            dayTitle: "Day 3, 12 Mar 2025",
+            activities: [
+              TimelineActivity(
+                icon: Icons.coffee,
+                title: "Breakfast & Checkout",
+                time: "09:00 AM",
+              ),
+              TimelineActivity(
+                icon: Icons.directions_bus,
+                title: "Depart for Kochi",
+                time: "10:00 AM",
+              ),
+            ],
+          ),
+        ],
+      );
+    }
 
     return Column(
       children: [
-        // Header
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
           decoration: BoxDecoration(
             color: card.color,
             borderRadius: const BorderRadius.only(
@@ -320,146 +277,183 @@ class _ItineraryPageState extends State<ItineraryPage> {
               bottomRight: Radius.circular(32),
             ),
           ),
-          child: SafeArea(
-            bottom: false,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _selectedIndex = -1;
-                        });
-                      },
-                      child: const CircleAvatar(
-                        backgroundColor: Colors.white,
-                        radius: 18,
-                        child: Icon(
-                          Icons.arrow_back,
-                          size: 20,
-                          color: Colors.black87,
-                        ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => setState(() => _selectedIndex = -1),
+                    child: const CircleAvatar(
+                      backgroundColor: Colors.white,
+                      radius: 18,
+                      child: Icon(Icons.arrow_back, color: Colors.black87),
+                    ),
+                  ),
+                  const Spacer(),
+                  Icon(card.icon, color: Colors.white, size: 32),
+                ],
+              ),
+              const SizedBox(height: 18),
+              Text(
+                card.title,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 26,
+                ),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.all(24),
+            itemCount: card.content.length,
+            itemBuilder: (context, i) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.check_circle_outline, color: card.color, size: 20),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      card.content[i],
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Colors.black87,
                       ),
                     ),
-                    const Spacer(),
-                    CircleAvatar(
-                      backgroundColor: Colors.white.withOpacity(0.2),
-                      radius: 18,
-                      child: Icon(
-                        Icons.bookmark_border,
-                        size: 20,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    CircleAvatar(
-                      backgroundColor: Colors.white.withOpacity(0.2),
-                      radius: 18,
-                      child: Icon(Icons.share, size: 20, color: Colors.white),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                Icon(card.icon, color: Colors.white, size: 40),
-                const SizedBox(height: 16),
-                Text(
-                  card.title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 28,
                   ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '${card.content.length} items',
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.8),
-                    fontSize: 16,
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
-
-        // Content
-        Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: card.content.length,
-            itemBuilder: (context, index) {
-              final item = card.content[index];
-              final bool isHeader =
-                  !item.startsWith('•') && !item.startsWith('- ');
-
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (!isHeader)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4),
-                        child: Icon(
-                          Icons.check_circle,
-                          color: card.color,
-                          size: 18,
-                        ),
-                      ),
-                    if (isHeader)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4),
-                        child: Icon(
-                          item.contains('Day')
-                              ? Icons.calendar_today
-                              : Icons.label,
-                          color: card.color,
-                          size: 18,
-                        ),
-                      ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            item,
-                            style: TextStyle(
-                              fontSize: isHeader ? 18 : 15,
-                              fontWeight: isHeader
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
-                              color: Colors.grey.shade800,
-                            ),
-                          ),
-                          if (isHeader) const SizedBox(height: 4),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ),
       ],
+    );
+  }
+
+  Widget _dayTimeline({
+    required String dayTitle,
+    required List<TimelineActivity> activities,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.green.shade100.withOpacity(0.15),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            dayTitle,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 12),
+          ...activities.map((activity) => _timelineTile(activity)).toList(),
+        ],
+      ),
+    );
+  }
+
+  Widget _timelineTile(TimelineActivity activity) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Column(
+            children: [
+              Icon(activity.icon, color: Colors.green.shade400, size: 24),
+              Container(width: 2, height: 32, color: Colors.green.shade100),
+            ],
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  activity.title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                  ),
+                ),
+                Text(
+                  activity.time,
+                  style: const TextStyle(fontSize: 13, color: Colors.grey),
+                ),
+                if (activity.actionLabel != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green.shade400,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 18,
+                          vertical: 8,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
+                      ),
+                      onPressed: activity.onAction,
+                      child: Text(activity.actionLabel!),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
 
 class ItineraryCardData {
   final String title;
-  final Color color;
   final IconData icon;
+  final Color color;
   final List<String> content;
 
   ItineraryCardData({
     required this.title,
-    required this.color,
     required this.icon,
+    required this.color,
     required this.content,
+  });
+}
+
+class TimelineActivity {
+  final IconData icon;
+  final String title;
+  final String time;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+
+  TimelineActivity({
+    required this.icon,
+    required this.title,
+    required this.time,
+    this.actionLabel,
+    this.onAction,
   });
 }
