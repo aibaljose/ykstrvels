@@ -23,6 +23,11 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
     super.initState();
     _fetchData();
     _loadUserProfile();
+
+     // Add this to show the trial offer popup after a brief delay
+     Future.delayed(Duration(milliseconds: 500), () {
+    _showTrialOffer();
+  });
   }
 
   Future<void> _fetchData() async {
@@ -77,12 +82,6 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
           child: _isLoading ? _buildLoadingIndicator() : _buildPageContent(),
         ),
         bottomNavigationBar: _buildBottomNavBar(),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {},
-          backgroundColor: const Color.fromARGB(255, 57, 43, 43),
-          child: const Icon(Icons.add, color: Colors.white),
-        ),
-        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       ),
     );
   }
@@ -96,7 +95,9 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
         return _buildPlacesContent();
       case 2: // Events tab
         return _buildEventsContent();
-      case 3: // Profile tab
+      case 3: // Event Tab
+        return _buildEventsContent();
+      case 4: // Profile Tab
         return _buildProfileContent();
       default:
         return _buildHomeContent();
@@ -535,13 +536,14 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
         children: [
           _buildNavItem(Icons.home, 'Home', _currentNavIndex == 0, 0),
           _buildNavItem(Icons.auto_stories, 'Places', _currentNavIndex == 1, 1),
-          const SizedBox(width: 30), // Space for FAB
-          _buildNavItem(Icons.message, 'Events', _currentNavIndex == 2, 2),
-          _buildNavItem(Icons.settings, 'Profile', _currentNavIndex == 3, 3),
+          _buildNavItem(Icons.calendar_today, 'Itinerary', _currentNavIndex == 2, 2),
+          _buildNavItem(Icons.message, 'Events', _currentNavIndex == 3, 3),
+          _buildNavItem(Icons.settings, 'Profile', _currentNavIndex == 4, 4),
         ],
       ),
     );
   }
+
 
   Widget _buildNavItem(
     IconData icon,
@@ -557,19 +559,21 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
 
         // Handle navigation actions based on index
         switch (index) {
-          case 0: // Home
-            // Already on home, just refresh data if needed
+          case 0:
             _fetchData();
             break;
-          case 1: // Places
-            // Navigate to Itinerary page
-            Navigator.pushNamed(context, '/itinerary');
+          case 1:
+          // Places logic
             break;
-          case 2: // Events
-            // Events view functionality
+          case 2:
+          // Itinerary navigation
+          //   Navigator.pushNamed(context, '/itinerary');
             break;
-          case 3: // Profile
-            // Profile view functionality
+          case 3:
+          // Events logic
+            break;
+          case 4:
+          // Profile logic
             break;
         }
       },
@@ -912,6 +916,125 @@ Widget _buildEventCard(String title, String location, String imageUrl) {
           ),
         ),
       ),
+    );
+  }
+
+  void _showTrialOffer() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Color(0xFF4A148C),
+                  Color(0xFF7B1FA2),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'First Time Login Offer',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        'Limited Time',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 16),
+                Icon(
+                  Icons.card_giftcard,
+                  size: 60,
+                  color: Colors.amber,
+                ),
+                SizedBox(height: 16),
+                Text(
+                  '3 Months Free Trial',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      '\$1000',
+                      style: TextStyle(
+                        color: Colors.grey[400],
+                        fontSize: 20,
+                        decoration: TextDecoration.lineThrough,
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    Text(
+                      'FREE',
+                      style: TextStyle(
+                        color: Colors.green[300],
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context); // Close the dialog
+                    // Add your activation logic here
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    minimumSize: Size(double.infinity, 45),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: Text(
+                    'Activate Now',
+                    style: TextStyle(
+                      color: Color(0xFF4A148C),
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

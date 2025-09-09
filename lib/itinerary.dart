@@ -7,6 +7,21 @@ class ItineraryPage extends StatefulWidget {
   State<ItineraryPage> createState() => _ItineraryPageState();
 }
 
+class ItineraryScreen extends StatelessWidget {
+  const ItineraryScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Itinerary')),
+      body: const Center(
+        child: Text('Your itinerary goes here.'),
+      ),
+    );
+  }
+}
+
+
 class _ItineraryPageState extends State<ItineraryPage> {
   int _selectedIndex = -1;
 
