@@ -24,10 +24,10 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
     _fetchData();
     _loadUserProfile();
 
-     // Add this to show the trial offer popup after a brief delay
-     Future.delayed(Duration(milliseconds: 500), () {
-    _showTrialOffer();
-  });
+    // Add this to show the trial offer popup after a brief delay
+    Future.delayed(Duration(milliseconds: 500), () {
+      _showTrialOffer();
+    });
   }
 
   Future<void> _fetchData() async {
@@ -86,19 +86,223 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
     );
   }
 
+  Widget _buildItineraryContent() {
+    return Column(
+      children: [
+        // Header
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Travel Itinerary',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              IconButton(
+                icon: Icon(
+                  Icons.add_circle_outline,
+                  color: Colors.green.shade400,
+                ),
+                onPressed: () {
+                  // Add new itinerary logic
+                },
+              ),
+            ],
+          ),
+        ),
+
+        // Search bar
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.grey.shade300),
+            ),
+            child: TextField(
+              decoration: InputDecoration(
+                hintText: 'Search itineraries...',
+                prefixIcon: Icon(Icons.search, color: Colors.blue.shade400),
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(vertical: 16),
+              ),
+            ),
+          ),
+        ),
+
+        // Itinerary list
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: 5, // Replace with actual itinerary count
+            itemBuilder: (context, index) {
+              return Card(
+                margin: const EdgeInsets.only(bottom: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                elevation: 4,
+                child: Column(
+                  children: [
+                    // Itinerary header image
+                    Container(
+                      height: 120,
+                      decoration: BoxDecoration(
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(16),
+                        ),
+                        image: DecorationImage(
+                          image: NetworkImage(
+                            'https://picsum.photos/400/${250 + index}',
+                          ),
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+
+                    // Itinerary details
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Trip to Dubai',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey.shade800,
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.green.shade50,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  '5 Days',
+                                  style: TextStyle(
+                                    color: Colors.green.shade700,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.calendar_today,
+                                size: 16,
+                                color: Colors.grey.shade600,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Sep 15 - Sep 20, 2025',
+                                style: TextStyle(
+                                  color: Colors.grey.shade600,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: () {},
+                                  icon: const Icon(Icons.edit_outlined),
+                                  label: const Text('Edit'),
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: Colors.blue.shade700,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  onPressed: () {
+                                    // Navigate to places content as full page
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (context) => Scaffold(
+                                          appBar: AppBar(
+                                            title: const Text('Places'),
+                                            backgroundColor: Colors.green.shade400,
+                                            elevation: 0,
+                                          ),
+                                          body: _buildPlacesContent(),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  icon: const Icon(Icons.visibility),
+                                  label: const Text('View'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.green.shade400,
+                                    foregroundColor: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildPageContent() {
-    // Return different content based on current navigation index
     switch (_currentNavIndex) {
-      case 0: // Home tab
+      case 0:
         return _buildHomeContent();
-      case 1: // Places tab
+      case 1:
+        return _buildItineraryContent(); // Update this line
+      case 2:
         return _buildPlacesContent();
-      case 2: // Events tab
+      case 3:
         return _buildEventsContent();
-      case 3: // Event Tab
-        return _buildEventsContent();
-      case 4: // Profile Tab
-        return _buildProfileContent();
+      case 4:
+        return const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.movie_outlined, size: 64, color: Colors.grey),
+              SizedBox(height: 16),
+              Text(
+                'Reels Coming Soon',
+                style: TextStyle(
+                  fontSize: 20,
+                  color: Colors.grey,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        );
       default:
         return _buildHomeContent();
     }
@@ -133,63 +337,85 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
               const Spacer(),
 
               // Profile picture from Google Sign-in
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: Colors.red.shade400,
-                  borderRadius: BorderRadius.circular(20),
-                  image: _profilePhotoUrl != null
-                      ? DecorationImage(
-                          image: NetworkImage(_profilePhotoUrl!),
-                          fit: BoxFit.cover,
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    // Show profile content in a modal bottom sheet
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (context) => Container(
+                        height: MediaQuery.of(context).size.height * 0.9,
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(20),
+                            topRight: Radius.circular(20),
+                          ),
+                        ),
+                        child: _buildProfileContent(),
+                      ),
+                    );
+                  });
+                },
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade400,
+                    borderRadius: BorderRadius.circular(20),
+                    image: _profilePhotoUrl != null
+                        ? DecorationImage(
+                            image: NetworkImage(_profilePhotoUrl!),
+                            fit: BoxFit.cover,
+                          )
+                        : null,
+                  ),
+                  child: _profilePhotoUrl == null
+                      ? const Icon(
+                          Icons.person_outline,
+                          color: Colors.white,
+                          size: 20,
                         )
                       : null,
                 ),
-                // Show icon as fallback if no profile photo
-                child: _profilePhotoUrl == null
-                    ? const Icon(
-                        Icons.person_outline,
-                        color: Colors.white,
-                        size: 20,
-                      )
-                    : null,
               ), // Balance the layout
             ],
           ),
         ),
- Padding(
-  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-  child: Container(
-    decoration: BoxDecoration(
-      color: Colors.grey.shade100,
-      borderRadius: BorderRadius.circular(16),
-      border: Border.all(
-        color: Colors.grey.shade300, // light grey border
-        width: 1.0,
-      ),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withOpacity(0.05),
-          blurRadius: 8,
-          offset: const Offset(0, 2),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: Colors.grey.shade300, // light grey border
+                width: 1.0,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: TextField(
+              decoration: InputDecoration(
+                hintText: 'Search destination...',
+                prefixIcon: Icon(Icons.search, color: Colors.blue.shade400),
+                border: InputBorder.none, // remove TextField’s own border
+                contentPadding: const EdgeInsets.symmetric(vertical: 16),
+              ),
+              onChanged: (value) {
+                // TODO: Implement search/filter logic
+              },
+            ),
+          ),
         ),
-      ],
-    ),
-    child: TextField(
-      decoration: InputDecoration(
-        hintText: 'Search destination...',
-        prefixIcon: Icon(Icons.search, color: Colors.blue.shade400),
-        border: InputBorder.none, // remove TextField’s own border
-        contentPadding: const EdgeInsets.symmetric(vertical: 16),
-      ),
-      onChanged: (value) {
-        // TODO: Implement search/filter logic
-      },
-    ),
-  ),
-),
-    const SizedBox(height: 20),
+        const SizedBox(height: 20),
         // Tab selector
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -207,7 +433,6 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
         const SizedBox(height: 20),
 
         // Search bar
-      
 
         // Stories list
         Expanded(
@@ -519,31 +744,54 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
   // Removed unused _buildSingleStory method
 
   Widget _buildBottomNavBar() {
-    return Container(
-      height: 80,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
+    return Stack(
+      children: [
+        Container(
+          height: 80,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 10,
+                offset: const Offset(0, -2),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildNavItem(Icons.home, 'Home', _currentNavIndex == 0, 0),
-          _buildNavItem(Icons.auto_stories, 'Places', _currentNavIndex == 1, 1),
-          _buildNavItem(Icons.calendar_today, 'Itinerary', _currentNavIndex == 2, 2),
-          _buildNavItem(Icons.message, 'Events', _currentNavIndex == 3, 3),
-          _buildNavItem(Icons.settings, 'Profile', _currentNavIndex == 4, 4),
-        ],
-      ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildNavItem(Icons.home, 'Home', _currentNavIndex == 0, 0),
+              _buildNavItem(
+                Icons.calendar_today,
+                'Itinerary',
+                _currentNavIndex == 1,
+                1,
+              ),
+              const SizedBox(width: 60), // Space for FAB
+              _buildNavItem(Icons.event, 'Events', _currentNavIndex == 3, 3),
+              _buildNavItem(Icons.movie, 'Reels', _currentNavIndex == 4, 4),
+            ],
+          ),
+        ),
+        // Floating Search Button
+        // Update the Floating Search Button in _buildBottomNavBar
+        Positioned(
+          left: 0,
+          right: 0,
+          top: 5,
+          child: Center(
+            child: FloatingActionButton(
+              onPressed: null, // Disable the button
+              backgroundColor: Colors.grey.shade400, // Use grey color to indicate disabled state
+              child: const Icon(Icons.search, color: Colors.white),
+              elevation: 4,
+            ),
+          ),
+        ),
+      ],
     );
   }
-
 
   Widget _buildNavItem(
     IconData icon,
@@ -552,31 +800,27 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
     int index,
   ) {
     return GestureDetector(
-      onTap: () {
-        setState(() {
-          _currentNavIndex = index;
-        });
+      onTap: index == 4
+          ? null
+          : () {
+              // Disable tap for Reels button
+              setState(() {
+                _currentNavIndex = index;
+              });
 
-        // Handle navigation actions based on index
-        switch (index) {
-          case 0:
-            _fetchData();
-            break;
-          case 1:
-          // Places logic
-            break;
-          case 2:
-          // Itinerary navigation
-          //   Navigator.pushNamed(context, '/itinerary');
-            break;
-          case 3:
-          // Events logic
-            break;
-          case 4:
-          // Profile logic
-            break;
-        }
-      },
+              // Handle navigation actions based on index
+              switch (index) {
+                case 0:
+                  _fetchData();
+                  break;
+                case 1:
+                  // Itinerary logic
+                  break;
+                case 3:
+                  // Events logic
+                  break;
+              }
+            },
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -648,189 +892,402 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
 
   // Places tab content
   Widget _buildPlacesContent() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.map, size: 80, color: Colors.green.shade300),
-          const SizedBox(height: 16),
-          Text(
-            'Places',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey.shade800,
+    final List<ItineraryCardData> placeCards = [
+      ItineraryCardData(
+        title: 'Before You Fly',
+        icon: Icons.flight_takeoff,
+        color: Colors.blue.shade600,
+        content: [
+          'Check passport validity (min 6 months)',
+          'Confirm flight details & check-in online',
+          'Purchase travel insurance',
+          'Notify your bank of travel plans',
+          'Make copies of important documents',
+          'Exchange currency or arrange travel card',
+          'Check weather forecast',
+          'Confirm hotel reservations',
+        ],
+      ),
+      ItineraryCardData(
+        title: 'Things To Know',
+        icon: Icons.info_outline,
+        color: Colors.indigo.shade400,
+        content: [
+          'Local emergency numbers: 911',
+          'Embassy contact: +1-555-123-4567',
+          'Local language: English',
+          'Currency: USD',
+          'Time zone: UTC-5',
+          'Tipping: 15-20%',
+          'Tap water is safe',
+          'Public transport: Subway, buses, rideshare',
+        ],
+      ),
+      ItineraryCardData(
+        title: 'Itinerary',
+        icon: Icons.map_outlined,
+        color: Colors.green.shade400,
+        content: [
+          'Day 1: Arrive at Kochi Airport',
+          'Day 1: Hotel Check In',
+          'Day 1: Visit Tea Gardens',
+          'Day 2: Explore Eravikulam National Park',
+          'Day 2: Shopping at Local Market',
+          'Day 3: Checkout and Departure',
+        ],
+      ),
+      ItineraryCardData(
+        title: 'Budget & Tips',
+        icon: Icons.account_balance_wallet_outlined,
+        color: Colors.orange.shade400,
+        content: [
+          'Accommodation: \$150-200/night',
+          'Meals: \$50-80/day',
+          'Transport: \$30/day',
+          'Activities: \$200 total',
+          'Tips: Use public transport, city passes, free museum days',
+        ],
+      ),
+      ItineraryCardData(
+        title: 'Packing List',
+        icon: Icons.luggage_outlined,
+        color: Colors.red.shade400,
+        content: [
+          'Passport & ID',
+          'Flight tickets',
+          'Credit cards & cash',
+          'Phone & charger',
+          'Medications',
+          'Weather-appropriate clothes',
+          'Comfortable shoes',
+          'Toiletries',
+        ],
+      ),
+    ];
+
+    return Column(
+      children: [
+        // Header
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Travel Planning',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              IconButton(
+                icon: Icon(Icons.filter_list, color: Colors.green.shade400),
+                onPressed: () {},
+              ),
+            ],
+          ),
+        ),
+
+        // Search bar
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.grey.shade300),
+            ),
+            child: TextField(
+              decoration: InputDecoration(
+                hintText: 'Search plans...',
+                prefixIcon: Icon(Icons.search, color: Colors.blue.shade400),
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(vertical: 16),
+              ),
             ),
           ),
-          const SizedBox(height: 8),
+        ),
+
+        // Grid view of cards
+        Expanded(
+          child: GridView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: placeCards.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              childAspectRatio: 1.1,
+            ),
+            itemBuilder: (context, index) {
+              final card = placeCards[index];
+              return GestureDetector(
+                onTap: () {
+                  // Show detailed day plan
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => Scaffold(
+                        appBar: AppBar(
+                          title: Text(card.title),
+                          backgroundColor: card.color,
+                          elevation: 0,
+                        ),
+                        body: ListView.builder(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: _getDayPlans(card.title).length,
+                          itemBuilder: (context, index) {
+                            final dayPlan = _getDayPlans(card.title)[index];
+                            return Card(
+                              margin: const EdgeInsets.only(bottom: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: ExpansionTile(
+                                title: Text(
+                                  'Day ${index + 1}',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18,
+                                  ),
+                                ),
+                                children: dayPlan.map((activity) {
+                                  return ListTile(
+                                    leading: const Icon(Icons.circle, size: 12),
+                                    title: Text(activity),
+                                    dense: true,
+                                  );
+                                }).toList(),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  );
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(18),
+                    boxShadow: [
+                      BoxShadow(
+                        color: card.color.withOpacity(0.08),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(card.icon, color: card.color, size: 32),
+                      const SizedBox(height: 12),
+                      Text(
+                        card.title,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: card.color,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 8),
+                      Expanded(
+                        child: ListView.builder(
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: card.content.length > 2 ? 2 : card.content.length,
+                          itemBuilder: (context, i) => Padding(
+                            padding: const EdgeInsets.only(bottom: 4),
+                            child: Text(
+                              '• ${card.content[i]}',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.black87,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ),
+                      ),
+                      if (card.content.length > 2)
+                        Text(
+                          '+${card.content.length - 2} more',
+                          style: TextStyle(
+                            color: card.color,
+                            fontWeight: FontWeight.w500,
+                            fontSize: 12,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Events tab content
+  Widget _buildEventsContent() {
+    // Local event data
+    final events = [
+      {
+        "title": "Heart of Majestic Forests",
+        "location": "Norway's",
+        "imageUrl": "https://picsum.photos/400/250",
+      },
+      {
+        "title": "Sunny Beach Escape",
+        "location": "Maldives",
+        "imageUrl": "https://picsum.photos/400/251",
+      },
+      {
+        "title": "Sunny Beach Escape",
+        "location": "Maldives",
+        "imageUrl": "https://picsum.photos/400/251",
+      },
+      {
+        "title": "Sunny Beach Escape",
+        "location": "Maldives",
+        "imageUrl": "https://picsum.photos/400/251",
+      },
+      {
+        "title": "Sunny Beach Escape",
+        "location": "Maldives",
+        "imageUrl": "https://picsum.photos/400/251",
+      },
+      {
+        "title": "Sunny Beach Escape",
+        "location": "Maldives",
+        "imageUrl": "https://picsum.photos/400/251",
+      },
+      {
+        "title": "Sunny Beach Escape",
+        "location": "Maldives",
+        "imageUrl": "https://picsum.photos/400/251",
+      },
+      {
+        "title": "Sunny Beach Escape",
+        "location": "Maldives",
+        "imageUrl": "https://picsum.photos/400/251",
+      },
+      {
+        "title": "Sunny Beach Escape",
+        "location": "Maldives",
+        "imageUrl": "https://picsum.photos/400/251",
+      },
+      {
+        "title": "Sunny Beach Escape",
+        "location": "Maldives",
+        "imageUrl": "https://picsum.photos/400/251",
+      },
+      {
+        "title": "Sunny Beach Escape",
+        "location": "Maldives",
+        "imageUrl": "https://picsum.photos/400/251",
+      },
+    ];
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(12),
+      itemCount: events.length,
+      itemBuilder: (context, index) {
+        final event = events[index];
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          child: _buildEventCard(
+            event['title']!,
+            event['location']!,
+            event['imageUrl']!,
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildEventCard(String title, String location, String imageUrl) {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Image
+          ClipRRect(
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(16),
+              topRight: Radius.circular(16),
+            ),
+            child: Image.network(
+              imageUrl,
+              height: 200,
+              width: double.infinity,
+              fit: BoxFit.cover,
+            ),
+          ),
+
+          // Text + Button
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32.0),
-            child: Text(
-              'Discover amazing travel destinations',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey.shade600),
+            padding: const EdgeInsets.all(12.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey.shade800,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.location_on,
+                            size: 16,
+                            color: Colors.grey,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            location,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.yellow,
+                    shape: BoxShape.circle,
+                  ),
+                  child: IconButton(
+                    icon: const Icon(Icons.arrow_outward),
+                    onPressed: () {},
+                  ),
+                ),
+              ],
             ),
           ),
         ],
       ),
     );
   }
-
-  // Events tab content
-Widget _buildEventsContent() {
-  // Local event data
-  final events = [
-    {
-      "title": "Heart of Majestic Forests",
-      "location": "Norway's",
-      "imageUrl": "https://picsum.photos/400/250"
-    },
-    {
-      "title": "Sunny Beach Escape",
-      "location": "Maldives",
-      "imageUrl": "https://picsum.photos/400/251"
-    },
-    {
-      "title": "Sunny Beach Escape",
-      "location": "Maldives",
-      "imageUrl": "https://picsum.photos/400/251"
-    },
-    {
-      "title": "Sunny Beach Escape",
-      "location": "Maldives",
-      "imageUrl": "https://picsum.photos/400/251"
-    },
-    {
-      "title": "Sunny Beach Escape",
-      "location": "Maldives",
-      "imageUrl": "https://picsum.photos/400/251"
-    },
-    {
-      "title": "Sunny Beach Escape",
-      "location": "Maldives",
-      "imageUrl": "https://picsum.photos/400/251"
-    },
-    {
-      "title": "Sunny Beach Escape",
-      "location": "Maldives",
-      "imageUrl": "https://picsum.photos/400/251"
-    },
-    {
-      "title": "Sunny Beach Escape",
-      "location": "Maldives",
-      "imageUrl": "https://picsum.photos/400/251"
-    },
-    {
-      "title": "Sunny Beach Escape",
-      "location": "Maldives",
-      "imageUrl": "https://picsum.photos/400/251"
-    },
-    {
-      "title": "Sunny Beach Escape",
-      "location": "Maldives",
-      "imageUrl": "https://picsum.photos/400/251"
-    },
-    {
-      "title": "Sunny Beach Escape",
-      "location": "Maldives",
-      "imageUrl": "https://picsum.photos/400/251"
-    },
-  ];
-
-  return ListView.builder(
-    padding: const EdgeInsets.all(12),
-    itemCount: events.length,
-    itemBuilder: (context, index) {
-      final event = events[index];
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8.0),
-        child: _buildEventCard(
-          event['title']!,
-          event['location']!,
-          event['imageUrl']!,
-        ),
-      );
-    },
-  );
-}
-
-Widget _buildEventCard(String title, String location, String imageUrl) {
-  return Card(
-    elevation: 4,
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(16),
-    ),
-    clipBehavior: Clip.antiAlias,
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Image
-        ClipRRect(
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(16),
-            topRight: Radius.circular(16),
-          ),
-          child: Image.network(
-            imageUrl,
-            height: 200,
-            width: double.infinity,
-            fit: BoxFit.cover,
-          ),
-        ),
-
-        // Text + Button
-        Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey.shade800,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        const Icon(Icons.location_on,
-                            size: 16, color: Colors.grey),
-                        const SizedBox(width: 4),
-                        Text(
-                          location,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                decoration: const BoxDecoration(
-                  color: Colors.yellow,
-                  shape: BoxShape.circle,
-                ),
-                child: IconButton(
-                  icon: const Icon(Icons.arrow_outward),
-                  onPressed: () {},
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
 
   // Profile tab content
   Widget _buildProfileContent() {
@@ -931,10 +1388,7 @@ Widget _buildEventCard(String title, String location, String imageUrl) {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [
-                  Color(0xFF4A148C),
-                  Color(0xFF7B1FA2),
-                ],
+                colors: [Color(0xFF4A148C), Color(0xFF7B1FA2)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -962,20 +1416,13 @@ Widget _buildEventCard(String title, String location, String imageUrl) {
                       ),
                       child: Text(
                         'Limited Time',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                        ),
+                        style: TextStyle(color: Colors.white, fontSize: 12),
                       ),
                     ),
                   ],
                 ),
                 SizedBox(height: 16),
-                Icon(
-                  Icons.card_giftcard,
-                  size: 60,
-                  color: Colors.amber,
-                ),
+                Icon(Icons.card_giftcard, size: 60, color: Colors.amber),
                 SizedBox(height: 16),
                 Text(
                   '3 Months Free Trial',
@@ -1037,6 +1484,59 @@ Widget _buildEventCard(String title, String location, String imageUrl) {
       },
     );
   }
+
+  // Add this method to get day-wise plans
+  List<List<String>> _getDayPlans(String cardTitle) {
+    switch (cardTitle) {
+      case 'Itinerary':
+        return [
+          [
+            'Arrive at Kochi Airport - 10:00 AM',
+            'Transfer to Hotel - 11:30 AM',
+            'Hotel Check-in - 12:30 PM',
+            'Lunch at Hotel - 1:30 PM',
+            'Visit Tea Gardens - 3:00 PM',
+            'Evening Tea Tasting - 5:00 PM',
+            'Dinner at Local Restaurant - 8:00 PM',
+          ],
+          [
+            'Breakfast at Hotel - 8:00 AM',
+            'Depart for Eravikulam National Park - 9:00 AM',
+            'Park Exploration - 10:00 AM',
+            'Lunch at Park Restaurant - 1:00 PM',
+            'Shopping at Local Market - 3:30 PM',
+            'Evening at Hotel - 6:00 PM',
+            'Dinner - 8:00 PM',
+          ],
+          [
+            'Breakfast - 8:00 AM',
+            'Pack and Check-out - 10:00 AM',
+            'Last-minute Shopping - 11:00 AM',
+            'Lunch - 1:00 PM',
+            'Transfer to Airport - 2:30 PM',
+            'Flight Departure - 5:00 PM',
+          ],
+        ];
+      case 'Before You Fly':
+        return [
+          [
+            'Check passport and visa requirements',
+            'Book flights and accommodation',
+            'Purchase travel insurance',
+          ],
+          [
+            'Pack essential documents',
+            'Arrange airport transfer',
+            'Online check-in',
+          ],
+        ];
+      // Add more cases for other cards
+      default:
+        return [
+          ['No detailed plan available'],
+        ];
+    }
+  }
 }
 
 class StoryData {
@@ -1056,5 +1556,19 @@ class StoryData {
     this.isVideo = false,
     this.description = '',
     this.location = '',
+  });
+}
+
+class ItineraryCardData {
+  final String title;
+  final IconData icon;
+  final Color color;
+  final List<String> content;
+
+  ItineraryCardData({
+    required this.title,
+    required this.icon,
+    required this.color,
+    required this.content,
   });
 }
