@@ -24,7 +24,7 @@ class _SplashScreenState extends State<SplashScreen>
     super.initState();
 
     // Preload Lottie animation to avoid delay
-    AssetLottie('assets/images/animations/Globe.lottie').load().then((composition) {
+    AssetLottie('assets/images/animations/Travel.json').load().then((composition) {
       print('✅ Lottie preloaded: ${composition.duration}');
     }).catchError((error) {
       print('❌ Lottie preload error: $error');

@@ -9,7 +9,7 @@ class LoadingIndicator extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Lottie.asset(
-        'assets/images/animations/Globe.lottie', // Confirm this path matches your file
+        'assets/images/animations/Travel.json', // Confirm this path matches your file
         width: 120,
         height: 120,
         fit: BoxFit.contain,

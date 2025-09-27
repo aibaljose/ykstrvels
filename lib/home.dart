@@ -5,6 +5,9 @@ import 'view_model/view_model.dart' as view_model;
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'package:lottie/lottie.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:ykstravels/view_model/itinerary_model.dart';
+import 'dart:convert';
+import 'itinerary.dart';
 
 //reels
 class ReelsPage extends StatefulWidget {
@@ -24,7 +27,8 @@ class TravelStoriesPage extends StatefulWidget {
 // itinerary inside cont
 
 class ItineraryStepsPage extends StatefulWidget {
-  const ItineraryStepsPage({super.key});
+  final Itinerary? itinerary;
+  const ItineraryStepsPage({super.key, this.itinerary});
 
   @override
   State<ItineraryStepsPage> createState() => _ItineraryStepsPageState();
@@ -36,9 +40,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: const LoadingScreen(),
-    );
+    return MaterialApp(home: const LoadingScreen());
   }
 }
 
@@ -70,7 +72,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
       body: Center(
         child: _isLoading
             ? Lottie.asset(
-                'assets/animations/loading.json', // Path to your Lottie file
+                'assets/image/animations/Travel.json', // Path to your Lottie file
                 width: 200,
                 height: 200,
                 fit: BoxFit.fill,
@@ -85,68 +87,33 @@ class _ItineraryStepsPageState extends State<ItineraryStepsPage> {
   int _currentStep = 0;
   final PageController _pageController = PageController();
 
-  // Example days with demo activities
-  final List<Map<String, dynamic>> days = [
-    {
-      "title": "Day 1",
-      "icon": Icons.looks_one,
-      "activities": [
-        "Arrival at Airport",
-        "Hotel Check-in",
-        "Welcome Dinner",
-        "Evening City Walk"
-      ],
-    },
-    {
-      "title": "Day 2",
-      "icon": Icons.looks_two,
-      "activities": [
-        "Breakfast at Hotel",
-        "Visit Local Museum",
-        "Lunch at Riverside Café",
-        "Boat Ride Experience",
-        "Dinner & Rest"
-      ],
-    },
-    {
-      "title": "Day 3",
-      "icon": Icons.looks_3,
-      "activities": [
-        "Morning Yoga Session",
-        "Mountain Hiking",
-        "Picnic Lunch",
-        "Photography Tour",
-        "Campfire Night"
-      ],
-    },
-    {
-      "title": "Day 4",
-      "icon": Icons.looks_4,
-      "activities": [
-        "City Sightseeing",
-        "Shopping at Local Market",
-        "Lunch with Traditional Food",
-        "Relax at Spa",
-        "Night Market Visit"
-      ],
-    },
-    {
-      "title": "Day 5",
-      "icon": Icons.looks_5,
-      "activities": [
-        "Breakfast & Checkout",
-        "Last-minute Shopping",
-        "Airport Drop",
-        "Flight Departure"
-      ],
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _currentStep = 0;
+  }
 
   @override
   Widget build(BuildContext context) {
+    // Use the passed itinerary or fall back to first itinerary from global list
+    final itinerary = widget.itinerary;
+    if (itinerary == null) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text("Itinerary Planner"),
+          centerTitle: true,
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black,
+          elevation: 0,
+        ),
+        body: const Center(child: Text("No itinerary data available")),
+      );
+    }
+
+    final days = itinerary.days;
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Itinerary Planner"),
+        title: Text(itinerary.title),
         centerTitle: true,
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
@@ -155,13 +122,8 @@ class _ItineraryStepsPageState extends State<ItineraryStepsPage> {
       body: Column(
         children: [
           const SizedBox(height: 20),
-
-          // 🔹 Horizontal Stepper Header
-          _buildStepperHeader(),
-
+          _buildStepperHeaderFixed(days),
           const SizedBox(height: 20),
-
-          // 🔹 PageView with swipe support
           Expanded(
             child: PageView.builder(
               controller: _pageController,
@@ -172,10 +134,8 @@ class _ItineraryStepsPageState extends State<ItineraryStepsPage> {
                 });
               },
               itemBuilder: (context, index) {
-                return _buildDayContent(
-                  days[index]["title"] as String,
-                  List<String>.from(days[index]["activities"] ?? []), // ✅ SAFE
-                );
+                final day = days[index];
+                return _buildDayContentFixed(day);
               },
             ),
           ),
@@ -184,11 +144,10 @@ class _ItineraryStepsPageState extends State<ItineraryStepsPage> {
     );
   }
 
-  /// 🔹 Stepper Header (Day1 → Day2 → Day3 → ...)
-  Widget _buildStepperHeader() {
+  Widget _buildStepperHeaderFixed(List<Day> days) {
     return Row(
       children: List.generate(days.length, (index) {
-        final step = days[index];
+        final day = days[index];
         final isActive = index <= _currentStep;
 
         return Expanded(
@@ -200,16 +159,22 @@ class _ItineraryStepsPageState extends State<ItineraryStepsPage> {
                     Expanded(
                       child: Container(
                         height: 2,
-                        color: isActive ? Colors.deepPurple : Colors.grey.shade300,
+                        color: isActive
+                            ? Colors.deepPurple
+                            : Colors.grey.shade300,
                       ),
                     ),
                   CircleAvatar(
                     radius: 20,
-                    backgroundColor:
-                    isActive ? Colors.deepPurple : Colors.grey.shade200,
-                    child: Icon(
-                      step["icon"] as IconData,
-                      color: isActive ? Colors.white : Colors.grey,
+                    backgroundColor: isActive
+                        ? Colors.deepPurple
+                        : Colors.grey.shade200,
+                    child: Text(
+                      day.day.toString(),
+                      style: TextStyle(
+                        color: isActive ? Colors.white : Colors.grey,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                   if (index != days.length - 1)
@@ -225,7 +190,7 @@ class _ItineraryStepsPageState extends State<ItineraryStepsPage> {
               ),
               const SizedBox(height: 6),
               Text(
-                step["title"] as String,
+                'Day ${day.day}',
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -239,15 +204,14 @@ class _ItineraryStepsPageState extends State<ItineraryStepsPage> {
     );
   }
 
-  /// 🔹 Day Content (shows activities list)
-  Widget _buildDayContent(String dayTitle, List<String> activities) {
+  Widget _buildDayContentFixed(Day day) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            dayTitle,
+            'Day ${day.day}',
             style: const TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
@@ -256,50 +220,84 @@ class _ItineraryStepsPageState extends State<ItineraryStepsPage> {
           ),
           const SizedBox(height: 16),
           Expanded(
-            child: activities.isEmpty
+            child: day.activities.isEmpty
                 ? const Center(
-              child: Text(
-                "No activities planned for this day.",
-                style: TextStyle(color: Colors.grey, fontSize: 16),
-              ),
-            )
+                    child: Text(
+                      "No activities planned for this day.",
+                      style: TextStyle(color: Colors.grey, fontSize: 16),
+                    ),
+                  )
                 : ListView.builder(
-              itemCount: activities.length,
-              itemBuilder: (context, index) {
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    itemCount: day.activities.length,
+                    itemBuilder: (context, index) {
+                      final activity = day.activities[index];
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 3,
+                        child: ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: Colors.deepPurple.shade100,
+                            child: Icon(
+                              _getActivityIcon(activity.icon),
+                              color: Colors.deepPurple,
+                            ),
+                          ),
+                          title: Text(
+                            activity.title,
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (activity.time.isNotEmpty)
+                                Text(
+                                  'Time: ${activity.time}',
+                                  style: TextStyle(
+                                    color: Colors.blue.shade600,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              Text(
+                                activity.description,
+                                style: const TextStyle(fontSize: 13),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
                   ),
-                  elevation: 3,
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: Colors.deepPurple.shade100,
-                      child: Text(
-                        "${index + 1}",
-                        style: const TextStyle(color: Colors.deepPurple),
-                      ),
-                    ),
-                    title: Text(
-                      activities[index],
-                      style: const TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                );
-              },
-            ),
           ),
         ],
       ),
     );
   }
+
+  IconData _getActivityIcon(String iconName) {
+    switch (iconName.toLowerCase()) {
+      case 'coffee':
+        return Icons.local_cafe;
+      case 'landmark':
+        return Icons.account_balance;
+      case 'food':
+        return Icons.restaurant;
+      case 'hotel':
+        return Icons.hotel;
+      case 'transport':
+        return Icons.directions_car;
+      default:
+        return Icons.event;
+    }
+  }
 }
 
 Widget _buildReelsContent() {
-  return  ReelsPage();
+  return const ReelsPage();
 }
 
-//reel page content
 class _ReelsPageState extends State<ReelsPage> {
   final PageController _pageController = PageController();
 
@@ -395,24 +393,34 @@ class _ReelsPageState extends State<ReelsPage> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             IconButton(
-                              icon: const Icon(Icons.favorite,
-                                  color: Colors.white),
+                              icon: const Icon(
+                                Icons.favorite,
+                                color: Colors.white,
+                              ),
                               onPressed: () {},
                             ),
-                            const Text("1.2k",
-                                style: TextStyle(color: Colors.white)),
+                            const Text(
+                              "1.2k",
+                              style: TextStyle(color: Colors.white),
+                            ),
                             const SizedBox(height: 16),
                             IconButton(
-                              icon: const Icon(Icons.comment,
-                                  color: Colors.white),
+                              icon: const Icon(
+                                Icons.comment,
+                                color: Colors.white,
+                              ),
                               onPressed: () {},
                             ),
-                            const Text("230",
-                                style: TextStyle(color: Colors.white)),
+                            const Text(
+                              "230",
+                              style: TextStyle(color: Colors.white),
+                            ),
                             const SizedBox(height: 16),
                             IconButton(
-                              icon:
-                              const Icon(Icons.share, color: Colors.white),
+                              icon: const Icon(
+                                Icons.share,
+                                color: Colors.white,
+                              ),
                               onPressed: () {},
                             ),
                           ],
@@ -434,7 +442,7 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
   int selectedTab = 0;
   int _currentNavIndex = 0;
   final view_model.ViewModel _viewModel = view_model.ViewModel();
-  List<view_model.HomeDataModel> _trips = [];
+  List<Itinerary> _itineraries = [];
   bool _isLoading = true;
   String? _profilePhotoUrl;
 
@@ -443,25 +451,236 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
     super.initState();
     _fetchData();
     _loadUserProfile();
-
-    // Add this to show the trial offer popup after a brief delay
-    Future.delayed(Duration(milliseconds: 500), () {
+    Future.delayed(const Duration(seconds: 3), () {
       _showTrialOffer();
     });
   }
 
   Future<void> _fetchData() async {
     try {
-      final trips = await _viewModel.fetchHomeData();
-      setState(() {
-        _trips = trips;
-        _isLoading = false;
-      });
+      const jsonString = '''
+      [
+        {
+          "id": 1758950263858,
+          "title": "Kerala blackwaters",
+          "image": "https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?q=80&w=1332&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+          "desc": "Explore the serene backwaters of Kerala.",
+          "rating": 0,
+          "destination": "Kerala, India",
+          "beforeyfly": {
+            "asdasdsad": "asdasdasdsadasd",
+            "asdsadasd": "asdasdsadasdasd",
+            "asdasdas": "dasdasdadsasd",
+            "sdfsfsdfsdf": "sdfsdfsdfd",
+            "sdfsdfsdf": "sdfsdfsdf"
+          },
+          "things2know": {
+            "sdfsdf": "sdfsdf",
+            "dfsdfsdfs": "dfsdfsdf",
+            "dfsdfsd": "fsdfsdf",
+            "sdfsdfs": "sfdfsdfsd"
+          },
+          "itinerary": {
+            "days": [
+              {
+                "day": 1,
+                "activities": [
+                  {
+                    "time": "1",
+                    "title": "foiod",
+                    "description": "asdadasdasd",
+                    "icon": "Coffee"
+                  },
+                  {
+                    "time": "2",
+                    "title": "sdfsf",
+                    "description": "sdfdsfsdfsdfsdfdsf",
+                    "icon": "Coffee"
+                  },
+                  {
+                    "time": "3",
+                    "title": "cxvcv",
+                    "description": "vdsdv",
+                    "icon": "Landmark"
+                  }
+                ]
+              },
+              {
+                "day": 2,
+                "activities": [
+                  {
+                    "time": "1",
+                    "title": "sdsdf",
+                    "description": "sfdsdfdsfsdfsdfsdfsdfsdfdsfsdfdsf",
+                    "icon": "Coffee"
+                  },
+                  {
+                    "time": "2",
+                    "title": "sdvsdvsdvs",
+                    "description": "vsdvsdvdsvsdvsdvsdvsdvsdv",
+                    "icon": "Coffee"
+                  },
+                  {
+                    "time": "3",
+                    "title": "sdcvds",
+                    "description": "svsdvsdvsvsdvsdv",
+                    "icon": "Coffee"
+                  }
+                ]
+              },
+              {
+                "day": 3,
+                "activities": [
+                  {
+                    "time": "1",
+                    "title": "sdvsvs",
+                    "description": "svsdvsdvsdvdsv",
+                    "icon": "Coffee"
+                  },
+                  {
+                    "time": "2",
+                    "title": "sdfsdcsdvsvsdv",
+                    "description": "scsdfdsfdsfdsfsdf",
+                    "icon": "Coffee"
+                  }
+                ]
+              }
+            ]
+          },
+          "budget": {
+            "total": "¥0",
+            "breakdown": {
+              "fsdfdsfds": "fsdfdfsdf",
+              "sdfsdfsdfs": "fsdf",
+              "dfsdfsdf": "sdfs",
+              "sdfsdf": "sdfsdf"
+            }
+          },
+          "packinglist": {
+            "sdfsfd": "sdfs",
+            "sdfdsdf": "sdfsdf",
+            "sdfsdf": "sdfsdf",
+            "sdfdsf": "sdfsdf",
+            "essentials": [],
+            "clothing": [],
+            "extras": [
+              "sdfs",
+              "sdfsdf",
+              "sdfsdf",
+              "sdfsdf"
+            ]
+          },
+          "createdAt": "2025-09-27T05:17:43.858Z"
+        },
+        {
+          "id": 1758875035892,
+          "title": "Bali | 2D1N",
+          "image": "https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+          "desc": "This was a temple in Bali well known for the sunset’s it can produce and trust me I was not the only person snapping this moment on their camera, If anything I wish I could go back to the location and try again but I tried multiple angle’s before getting this shot which I believe to be the best of my capabilities.",
+          "rating": 0,
+          "destination": "Bali, Indonesi",
+          "beforeyfly": {
+            "asdadad": "sadasdasdaas",
+            "asdasdasd": "asdsada",
+            "asdasdad": "asdasda",
+            "asdasda": "adsasda",
+            "adasd": "asdasd"
+          },
+          "things2know": {
+            "asdsad": "asdasd",
+            "asdasd": "asdasd",
+            "sdasd": "asdasd"
+          },
+          "itinerary": {
+            "days": [
+              {
+                "day": 1,
+                "activities": [
+                  {
+                    "time": "1:00 AM",
+                    "title": "Food",
+                    "description": "Food thitrha mathi",
+                    "icon": "Coffee"
+                  },
+                  {
+                    "time": "2",
+                    "title": "3",
+                    "description": "3",
+                    "icon": "Coffee"
+                  }
+                ]
+              },
+              {
+                "day": 2,
+                "activities": [
+                  {
+                    "time": "2",
+                    "title": "3",
+                    "description": "2",
+                    "icon": "Coffee"
+                  },
+                  {
+                    "time": "3",
+                    "title": "4",
+                    "description": "3",
+                    "icon": "Coffee"
+                  }
+                ]
+              }
+            ]
+          },
+          "budget": {
+            "total": "¥0",
+            "breakdown": {
+              "asdasd": "asdasd",
+              "asdad": "asdsad"
+            }
+          },
+          "packinglist": {
+            "asdasda": "adasda",
+            "essentials": [],
+            "clothing": [],
+            "extras": [
+              "adasda"
+            ]
+          },
+          "createdAt": "2025-09-26T08:23:55.892Z"
+        }
+      ]
+      ''';
+      print('JSON String length: ${jsonString.length}');
+      final List<dynamic> jsonData = jsonDecode(jsonString);
+      print('Parsed JSON items: ${jsonData.length}'); // Debug
+
+      if (mounted) {
+        setState(() {
+          _itineraries = jsonData
+              .map((item) {
+                try {
+                  final itinerary = Itinerary.fromJson(
+                    item as Map<String, dynamic>,
+                  );
+                  print('Successfully parsed: ${itinerary.title}'); // Debug
+                  return itinerary;
+                } catch (e) {
+                  print('Error parsing item: $e'); // Debug
+                  return null;
+                }
+              })
+              .where((item) => item != null)
+              .cast<Itinerary>()
+              .toList();
+
+          print('Total itineraries loaded: ${_itineraries.length}'); // Debug
+          _isLoading = false;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-      print("Error loading trips: $e");
+      print('Error in _fetchData: $e'); // Debug
+      if (mounted) setState(() => _isLoading = false);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
     }
   }
 
@@ -506,71 +725,12 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
     );
   }
 
-
   //template itinerary
   Widget _buildItineraryContent() {
-    final events = [
-      {
-        "title": "Heart of Majestic Forests",
-        "location": "Norway's",
-        "imageUrl": "https://picsum.photos/400/250",
-      },
-      {
-        "title": "Sunny Beach Escape",
-        "location": "Maldives",
-        "imageUrl": "https://picsum.photos/400/251",
-      },
-      {
-        "title": "Sunny Beach Escape",
-        "location": "Maldives",
-        "imageUrl": "https://picsum.photos/400/251",
-      },
-      {
-        "title": "Sunny Beach Escape",
-        "location": "Maldives",
-        "imageUrl": "https://picsum.photos/400/251",
-      },
-      {
-        "title": "Sunny Beach Escape",
-        "location": "Maldives",
-        "imageUrl": "https://picsum.photos/400/251",
-      },
-      {
-        "title": "Sunny Beach Escape",
-        "location": "Maldives",
-        "imageUrl": "https://picsum.photos/400/251",
-      },
-      {
-        "title": "Sunny Beach Escape",
-        "location": "Maldives",
-        "imageUrl": "https://picsum.photos/400/251",
-      },
-      {
-        "title": "Sunny Beach Escape",
-        "location": "Maldives",
-        "imageUrl": "https://picsum.photos/400/251",
-      },
-      {
-        "title": "Sunny Beach Escape",
-        "location": "Maldives",
-        "imageUrl": "https://picsum.photos/400/251",
-      },
-      {
-        "title": "Sunny Beach Escape",
-        "location": "Maldives",
-        "imageUrl": "https://picsum.photos/400/251",
-      },
-      {
-        "title": "Sunny Beach Escape",
-        "location": "Maldives",
-        "imageUrl": "https://picsum.photos/400/251",
-      },
-    ];
-
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Itinerary',
+          'Travel Packages',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
@@ -578,28 +738,31 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
         foregroundColor: const Color.fromARGB(255, 0, 0, 0),
         elevation: 0,
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(12),
-        itemCount: events.length,
-        itemBuilder: (context, index) {
-          final event = events[index];
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
-            child: _buildIteneraryCard(
-              context,
-              event['title']!,
-              event['location']!,
-              event['imageUrl']!,
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _itineraries.isEmpty
+          ? _buildEmptyState()
+          : ListView.builder(
+              padding: const EdgeInsets.all(12),
+              itemCount: _itineraries.length,
+              itemBuilder: (context, index) {
+                final itinerary = _itineraries[index];
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: _buildDynamicItineraryCard(itinerary),
+                );
+              },
             ),
-          );
-        },
-      ),
     );
   }
 
-// itinerary card design
+  // itinerary card design
   Widget _buildIteneraryCard(
-      BuildContext context, String title, String location, String imageUrl) {
+    BuildContext context,
+    String title,
+    String location,
+    String imageUrl,
+  ) {
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
@@ -758,36 +921,32 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
     );
   }
 
-
-// itinerary card design component
+  // itinerary card design component
   Widget _buildTag(IconData? icon, String label) {
     return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.18),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Row(
-            children: [
-              if (icon != null) Icon(icon, color: Colors.white, size: 14),
-              if (icon != null) const SizedBox(width: 4),
-              Text(
-                label,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.18),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          if (icon != null) Icon(icon, color: Colors.white, size: 14),
+          if (icon != null) const SizedBox(width: 4),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
             ),
-        );
-    }
+          ),
+        ],
+      ),
+    );
+  }
 
-
-
-
-    Widget _buildPageContent() {
+  Widget _buildPageContent() {
     switch (_currentNavIndex) {
       case 0:
         return _buildHomeContent();
@@ -831,7 +990,6 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
                 ),
               ),
               const Spacer(),
-
               // Profile picture from Google Sign-in
               GestureDetector(
                 onTap: () {
@@ -925,11 +1083,8 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
             ],
           ),
         ),
-
         const SizedBox(height: 20),
-
         // Search bar
-
         // Stories list
         Expanded(
           child: SingleChildScrollView(
@@ -938,41 +1093,25 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Dynamic trips from ViewModel
-                if (_trips.isEmpty)
+                if (_itineraries.isEmpty)
                   _buildEmptyState()
                 else
-                  ..._trips.map((trip) {
+                  ..._itineraries.map((itinerary) {
+                    print(
+                      'Rendering itinerary: ${itinerary.title}',
+                    ); // Add this debug line
                     return Column(
                       children: [
                         _buildTripCard(
-                          title: trip.title ?? 'Unnamed Trip',
-                          host: trip.host ?? 'Unknown Host',
-                          date: trip.date ?? 'No date',
-                          stories:
-                              trip.stories
-                                  ?.map(
-                                    (story) => StoryData(
-                                      title: story.storyTitle ?? 'No Title',
-                                      subtitle:
-                                          story.storyContent ?? 'No Content',
-                                      image: story.imageUrl ?? '',
-                                      isNetworkImage:
-                                          story.imageUrl != null &&
-                                          story.imageUrl!.isNotEmpty,
-                                      description: story.description ?? '',
-                                      location:
-                                          story.location ??
-                                          '', // <-- Pass location from ViewModel
-                                    ),
-                                  )
-                                  .toList() ??
-                              [],
+                          title: itinerary.title,
+                          host: itinerary.destination,
+                          date: itinerary.createdAt,
+                          stories: [], // This might need to be populated
                         ),
                         const SizedBox(height: 24),
                       ],
                     );
                   }),
-
                 const SizedBox(height: 80), // Extra space for bottom nav
               ],
             ),
@@ -1258,7 +1397,12 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _buildNavItem(Icons.home, 'Home', _currentNavIndex == 0, 0),
-              _buildNavItem(Icons.calendar_today,'Package',_currentNavIndex == 3,3,),
+              _buildNavItem(
+                Icons.calendar_today,
+                'Package',
+                _currentNavIndex == 3,
+                3,
+              ),
               const SizedBox(width: 60), // Space for FAB
               _buildNavItem(Icons.event, 'Events', _currentNavIndex == 1, 1),
               _buildNavItem(Icons.movie, 'Reels', _currentNavIndex == 4, 4),
@@ -1274,7 +1418,9 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
           child: Center(
             child: FloatingActionButton(
               onPressed: null, // Disable the button
-              backgroundColor: Colors.grey.shade400, // Use grey color to indicate disabled state
+              backgroundColor: Colors
+                  .grey
+                  .shade400, // Use grey color to indicate disabled state
               child: const Icon(Icons.search, color: Colors.white),
               elevation: 4,
             ),
@@ -1296,19 +1442,19 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
           _currentNavIndex = index;
         });
 
-              // Handle navigation actions based on index
-              switch (index) {
-                case 0:
-                  _fetchData();
-                  break;
-                case 1:
-                  // Itinerary logic
-                  break;
-                case 3:
-                  // Events logic
-                  break;
-              }
-            },
+        // Handle navigation actions based on index
+        switch (index) {
+          case 0:
+            _fetchData();
+            break;
+          case 1:
+            // Itinerary logic
+            break;
+          case 3:
+            // Events logic
+            break;
+        }
+      },
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -1380,57 +1526,82 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
 
   // Places tab content
   Widget _buildPlacesContent() {
+    // Get the first itinerary for dynamic data, or use default
+
+    final itinerary = _itineraries.isNotEmpty ? _itineraries.first : null;
+
     final List<ItineraryCardData> placeCards = [
       ItineraryCardData(
         title: 'Before You Fly',
         icon: Icons.flight_takeoff,
         color: Colors.blue.shade600,
-        content: [],
+        content:
+            itinerary?.beforeYouFly.entries
+                .map((e) => '${e.key}: ${e.value}')
+                .toList() ??
+            ['Check passport validity', 'Book flights', 'Travel insurance'],
       ),
       ItineraryCardData(
         title: 'Things To Know',
         icon: Icons.info_outline,
         color: Colors.indigo.shade400,
-        content: [],
+        content:
+            itinerary?.thingsToKnow.entries
+                .map((e) => '${e.key}: ${e.value}')
+                .toList() ??
+            ['Local customs', 'Currency info', 'Weather conditions'],
       ),
       ItineraryCardData(
         title: 'Itinerary',
         icon: Icons.map_outlined,
         color: Colors.green.shade400,
-        content: [],
+        content:
+            itinerary?.days
+                .map((d) => 'Day ${d.day}: ${d.activities.length} activities')
+                .toList() ??
+            ['Day 1: Arrival', 'Day 2: Sightseeing', 'Day 3: Departure'],
       ),
       ItineraryCardData(
         title: 'Budget & Tips',
         icon: Icons.account_balance_wallet_outlined,
         color: Colors.orange.shade400,
-        content: [],
+        content: itinerary != null
+            ? [
+                'Total Budget: ${itinerary.budget.total}',
+                ...itinerary.budget.breakdown.entries.map(
+                  (e) => '${e.key}: ${e.value}',
+                ),
+              ]
+            : [
+                'Total Budget: ${1000}',
+                'Accommodation: ${400}',
+                'Food: ${300}',
+                'Activities: ${300}',
+              ],
       ),
       ItineraryCardData(
         title: 'Packing List',
         icon: Icons.luggage_outlined,
         color: Colors.red.shade400,
-        content: [],
+        content: itinerary != null
+            ? [
+                ...itinerary.packingList.essentials.map(
+                  (item) => 'Essential: $item',
+                ),
+                ...itinerary.packingList.clothing.map(
+                  (item) => 'Clothing: $item',
+                ),
+                ...itinerary.packingList.extras.map((item) => 'Extra: $item'),
+              ]
+            : ['Clothes', 'Documents', 'Electronics', 'Medicines'],
       ),
     ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SizedBox(height: 20,),
-        // 🔹 Heading
-        // Padding(
-        //   padding: const EdgeInsets.all(16.0),
-        //   child: Text(
-        //     'Travel Planning',
-        //     style: const TextStyle(
-        //       fontSize: 24,
-        //       fontWeight: FontWeight.bold,
-        //       color: Colors.black87,
-        //     ),
-        //   ),
-        // ),
-
-        // 🔹 Vertical list of cards
+        const SizedBox(height: 20),
+        // Planning cards
         Expanded(
           child: ListView.builder(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -1442,24 +1613,18 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
                   if (card.title == "Itinerary") {
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (context) => const ItineraryStepsPage(),
+                        builder: (context) =>
+                            ItineraryStepsPage(itinerary: itinerary),
                       ),
                     );
                   } else {
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (context) => Scaffold(
-                          appBar: AppBar(
-                            title: Text(card.title),
-                            backgroundColor: card.color,
-                            elevation: 0,
-                          ),
-                          body: Center(
-                            child: Text(
-                              '${card.title} details go here',
-                              style: const TextStyle(fontSize: 18),
-                            ),
-                          ),
+                        builder: (context) => DetailContentPage(
+                          title: card.title,
+                          content: card.content,
+                          color: card.color,
+                          icon: card.icon,
                         ),
                       ),
                     );
@@ -1493,7 +1658,11 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
                           ),
                         ),
                       ),
-                      const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+                      const Icon(
+                        Icons.arrow_forward_ios,
+                        size: 16,
+                        color: Colors.grey,
+                      ),
                     ],
                   ),
                 ),
@@ -1504,7 +1673,6 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
       ],
     );
   }
-
 
   // Events tab content
   Widget _buildEventsContent() {
@@ -1567,34 +1735,33 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
     ];
 
     return Scaffold(
-        appBar: AppBar(
-          title: const Text(
-            'Itinerary',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          centerTitle: true,
-          backgroundColor: const Color.fromARGB(255, 255, 255, 255),
-          foregroundColor: const Color.fromARGB(255, 0, 0, 0),
-          elevation: 0,
+      appBar: AppBar(
+        title: const Text(
+          'Itinerary',
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        body: ListView.builder(
-            padding: const EdgeInsets.all(12),
-            itemCount: events.length,
-            itemBuilder: (context, index) {
-              final event = events[index];
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                child: _buildEventCard(
-                  event['title']!,
-                  event['location']!,
-                  event['imageUrl']!,
-                ),
-              );
-            },
-        ),
+        centerTitle: true,
+        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+        foregroundColor: const Color.fromARGB(255, 0, 0, 0),
+        elevation: 0,
+      ),
+      body: ListView.builder(
+        padding: const EdgeInsets.all(12),
+        itemCount: events.length,
+        itemBuilder: (context, index) {
+          final event = events[index];
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: _buildEventCard(
+              event['title']!,
+              event['location']!,
+              event['imageUrl']!,
+            ),
+          );
+        },
+      ),
     );
   }
-
 
   Widget _buildEventCard(String title, String location, String imageUrl) {
     return Card(
@@ -1870,6 +2037,212 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
     );
   }
 
+  Widget _buildDynamicItineraryCard(Itinerary itinerary) {
+    // Calculate total days
+    final totalDays = itinerary.days.length;
+
+    // Get a sample activity for preview
+    final sampleActivity =
+        itinerary.days.isNotEmpty && itinerary.days[0].activities.isNotEmpty
+        ? itinerary.days[0].activities[0].title
+        : 'Explore amazing destinations';
+
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      clipBehavior: Clip.antiAlias,
+      child: Stack(
+        children: [
+          // Background image
+          SizedBox(
+            height: 260,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(24),
+              child: Image.network(
+                itinerary.image,
+                height: 260,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    color: Colors.grey[300],
+                    child: const Icon(Icons.image_not_supported, size: 50),
+                  );
+                },
+              ),
+            ),
+          ),
+          // Overlay
+          Container(
+            height: 260,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(24),
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.black.withOpacity(0.15),
+                  Colors.black.withOpacity(0.65),
+                ],
+              ),
+            ),
+          ),
+          // Heart icon
+          Positioned(
+            top: 16,
+            right: 16,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.7),
+                shape: BoxShape.circle,
+              ),
+              child: IconButton(
+                icon: Icon(Icons.favorite_border, color: Colors.grey.shade700),
+                onPressed: () {
+                  // TODO: Implement favorite functionality
+                },
+              ),
+            ),
+          ),
+          // Rating badge
+          if (itinerary.rating > 0)
+            Positioned(
+              top: 16,
+              left: 16,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.6),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.star, color: Colors.amber, size: 16),
+                    const SizedBox(width: 4),
+                    Text(
+                      itinerary.rating.toString(),
+                      style: const TextStyle(color: Colors.white, fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          // Card content
+          Positioned(
+            left: 20,
+            right: 20,
+            bottom: 20,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Title and duration
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        itinerary.title,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.25),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '${totalDays}D',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                // Destination
+                Text(
+                  itinerary.destination,
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.9),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                // Description
+                Text(
+                  itinerary.desc.length > 100
+                      ? '${itinerary.desc.substring(0, 100)}...'
+                      : itinerary.desc,
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.8),
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // Tags
+                Row(
+                  children: [
+                    if (itinerary.rating > 0)
+                      _buildTag(Icons.star, '${itinerary.rating}.0'),
+                    if (itinerary.rating > 0) const SizedBox(width: 8),
+                    _buildTag(null, '${totalDays} Days'),
+                    const SizedBox(width: 8),
+                    if (totalDays >= 3) _buildTag(null, 'Complete Package'),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                // Plan Your Trip button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.black,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              DynamicTravelPlanningPage(itinerary: itinerary),
+                        ),
+                      );
+                    },
+                    child: const Text(
+                      'Plan Your Trip',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   // Add this method to get day-wise plans
   List<List<String>> _getDayPlans(String cardTitle) {
     switch (cardTitle) {
@@ -1924,6 +2297,559 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
   }
 }
 
+// itinerary Dynamic changes
+
+class DynamicTravelPlanningPage extends StatefulWidget {
+  final Itinerary itinerary;
+
+  const DynamicTravelPlanningPage({Key? key, required this.itinerary})
+    : super(key: key);
+
+  @override
+  State<DynamicTravelPlanningPage> createState() =>
+      _DynamicTravelPlanningPageState();
+}
+
+class _DynamicTravelPlanningPageState extends State<DynamicTravelPlanningPage> {
+  @override
+  Widget build(BuildContext context) {
+    final List<ItineraryCardData> planningCards = [
+      ItineraryCardData(
+        title: 'Before You Fly',
+        icon: Icons.flight_takeoff,
+        color: Colors.blue.shade600,
+        content: widget.itinerary.beforeYouFly.entries
+            .map((e) => '${e.key}: ${e.value}')
+            .toList(),
+      ),
+      ItineraryCardData(
+        title: 'Things To Know',
+        icon: Icons.info_outline,
+        color: Colors.indigo.shade400,
+        content: widget.itinerary.thingsToKnow.entries
+            .map((e) => '${e.key}: ${e.value}')
+            .toList(),
+      ),
+      ItineraryCardData(
+        title: 'Itinerary',
+        icon: Icons.map_outlined,
+        color: Colors.green.shade400,
+        content: widget.itinerary.days
+            .map((d) => 'Day ${d.day}: ${d.activities.length} activities')
+            .toList(),
+      ),
+      ItineraryCardData(
+        title: 'Budget & Tips',
+        icon: Icons.account_balance_wallet_outlined,
+        color: Colors.orange.shade400,
+        content: [
+          'Total Budget: ${widget.itinerary.budget.total}',
+          ...widget.itinerary.budget.breakdown.entries.map(
+            (e) => '${e.key}: ${e.value}',
+          ),
+        ],
+      ),
+      ItineraryCardData(
+        title: 'Packing List',
+        icon: Icons.luggage_outlined,
+        color: Colors.red.shade400,
+        content: [
+          ...widget.itinerary.packingList.essentials.map(
+            (item) => 'Essential: $item',
+          ),
+          ...widget.itinerary.packingList.clothing.map(
+            (item) => 'Clothing: $item',
+          ),
+          ...widget.itinerary.packingList.extras.map((item) => 'Extra: $item'),
+        ],
+      ),
+    ];
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.itinerary.title),
+        centerTitle: true,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        elevation: 0,
+      ),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Hero image
+          Container(
+            height: 200,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: NetworkImage(widget.itinerary.image),
+                fit: BoxFit.cover,
+              ),
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Colors.transparent, Colors.black.withOpacity(0.5)],
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.itinerary.destination,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      '${widget.itinerary.days.length} Days Journey',
+                      style: const TextStyle(color: Colors.white, fontSize: 16),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          // Planning cards
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              itemCount: planningCards.length,
+              itemBuilder: (context, index) {
+                final card = planningCards[index];
+                return GestureDetector(
+                  onTap: () {
+                    if (card.title == "Itinerary") {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => DynamicItineraryStepsPage(
+                            itinerary: widget.itinerary,
+                          ),
+                        ),
+                      );
+                    } else {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => DetailContentPage(
+                            title: card.title,
+                            content: card.content,
+                            color: card.color,
+                            icon: card.icon,
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(18),
+                      boxShadow: [
+                        BoxShadow(
+                          color: card.color.withOpacity(0.1),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: card.color.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(card.icon, color: card.color, size: 24),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                card.title,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: card.color,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '${card.content.length} items',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey.shade600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(
+                          Icons.arrow_forward_ios,
+                          size: 16,
+                          color: Colors.grey.shade400,
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class DynamicItineraryStepsPage extends StatefulWidget {
+  final Itinerary itinerary;
+
+  const DynamicItineraryStepsPage({Key? key, required this.itinerary})
+    : super(key: key);
+
+  @override
+  State<DynamicItineraryStepsPage> createState() =>
+      _DynamicItineraryStepsPageState();
+}
+
+class _DynamicItineraryStepsPageState extends State<DynamicItineraryStepsPage> {
+  int _currentStep = 0;
+  final PageController _pageController = PageController();
+
+  IconData _getIconForActivity(String iconName) {
+    switch (iconName.toLowerCase()) {
+      case 'coffee':
+        return Icons.local_cafe;
+      case 'landmark':
+        return Icons.account_balance;
+      case 'food':
+        return Icons.restaurant;
+      case 'hotel':
+        return Icons.hotel;
+      case 'transport':
+        return Icons.directions_car;
+      case 'activity':
+        return Icons.local_activity;
+      case 'shopping':
+        return Icons.shopping_bag;
+      case 'sightseeing':
+        return Icons.camera_alt;
+      default:
+        return Icons.event;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final days = widget.itinerary.days;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.itinerary.title),
+        centerTitle: true,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        elevation: 0,
+      ),
+      body: Column(
+        children: [
+          const SizedBox(height: 20),
+          _buildStepperHeader(days),
+          const SizedBox(height: 20),
+          Expanded(
+            child: PageView.builder(
+              controller: _pageController,
+              itemCount: days.length,
+              onPageChanged: (index) {
+                setState(() {
+                  _currentStep = index;
+                });
+              },
+              itemBuilder: (context, index) {
+                final day = days[index];
+                return _buildDayContent(day);
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStepperHeader(List<Day> days) {
+    return Container(
+      height: 80,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemCount: days.length,
+        itemBuilder: (context, index) {
+          final day = days[index];
+          final isActive = index <= _currentStep;
+          final isCurrent = index == _currentStep;
+
+          return GestureDetector(
+            onTap: () {
+              _pageController.animateToPage(
+                index,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+              );
+            },
+            child: Container(
+              width: 80,
+              margin: const EdgeInsets.only(right: 8),
+              child: Column(
+                children: [
+                  Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: isCurrent
+                          ? Colors.deepPurple
+                          : isActive
+                          ? Colors.deepPurple.shade300
+                          : Colors.grey.shade200,
+                      shape: BoxShape.circle,
+                      border: isCurrent
+                          ? Border.all(color: Colors.deepPurple, width: 3)
+                          : null,
+                    ),
+                    child: Center(
+                      child: Text(
+                        day.day.toString(),
+                        style: TextStyle(
+                          color: isActive ? Colors.white : Colors.grey,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Day ${day.day}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: isCurrent
+                          ? Colors.deepPurple
+                          : isActive
+                          ? Colors.deepPurple.shade300
+                          : Colors.grey,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildDayContent(Day day) {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Day ${day.day}',
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.deepPurple,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '${day.activities.length} activities planned',
+            style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
+          ),
+          const SizedBox(height: 20),
+          Expanded(
+            child: day.activities.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.event_busy,
+                          size: 64,
+                          color: Colors.grey.shade400,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          "No activities planned for this day",
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView.builder(
+                    itemCount: day.activities.length,
+                    itemBuilder: (context, index) {
+                      final activity = day.activities[index];
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.1),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.all(16),
+                          leading: Container(
+                            width: 50,
+                            height: 50,
+                            decoration: BoxDecoration(
+                              color: Colors.deepPurple.shade50,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              _getIconForActivity(activity.icon),
+                              color: Colors.deepPurple,
+                              size: 24,
+                            ),
+                          ),
+                          title: Text(
+                            activity.title,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 4),
+                              if (activity.time.isNotEmpty)
+                                Text(
+                                  'Time: ${activity.time}',
+                                  style: TextStyle(
+                                    color: Colors.blue.shade700,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              const SizedBox(height: 4),
+                              Text(
+                                activity.description,
+                                style: TextStyle(
+                                  color: Colors.grey.shade700,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                          trailing: Container(
+                            width: 30,
+                            height: 30,
+                            decoration: BoxDecoration(
+                              color: Colors.green.shade100,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Center(
+                              child: Text(
+                                '${index + 1}',
+                                style: TextStyle(
+                                  color: Colors.green.shade700,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class DetailContentPage extends StatelessWidget {
+  final String title;
+  final List<String> content;
+  final Color color;
+  final IconData icon;
+
+  const DetailContentPage({
+    Key? key,
+    required this.title,
+    required this.content,
+    required this.color,
+    required this.icon,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(title),
+        backgroundColor: color,
+        foregroundColor: Colors.white,
+        elevation: 0,
+      ),
+      body: content.isEmpty
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(icon, size: 64, color: Colors.grey.shade400),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No $title information available',
+                    style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
+                  ),
+                ],
+              ),
+            )
+          : ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: content.length,
+              itemBuilder: (context, index) {
+                final item = content[index];
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  child: ListTile(
+                    leading: Icon(icon, color: color),
+                    title: Text(item, style: const TextStyle(fontSize: 14)),
+                  ),
+                );
+              },
+            ),
+    );
+  }
+}
+
 class StoryData {
   final String title;
   final String subtitle;
@@ -1932,7 +2858,6 @@ class StoryData {
   final bool isVideo;
   final String description;
   final String location;
-
   StoryData({
     required this.title,
     required this.subtitle,
@@ -1949,7 +2874,6 @@ class ItineraryCardData {
   final IconData icon;
   final Color color;
   final List<String> content;
-
   ItineraryCardData({
     required this.title,
     required this.icon,

@@ -64,8 +64,8 @@ class MyApp extends StatelessWidget {
         '/signup': (context) => const Signup(),
         '/login': (context) => const Login(),
         '/home': (context) => const TravelStoriesPage(),
-        // '/itinerary': (context) => const ItineraryPage(),
-        '/itinerary': (context) => const ItineraryScreen(),
+        '/itinerary': (context) => const ItineraryPage(),
+        // '/itinerary': (context) => const ItineraryScreen(),
         '/package': (context) => const PackageDetailPage(
           imageUrl: '',
           title: '',

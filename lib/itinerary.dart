@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:ykstravels/view_model/itinerary_model.dart';
+import 'package:ykstravels/theme.dart'; // For AppColors
+import 'dart:convert';
 
 class ItineraryPage extends StatefulWidget {
   const ItineraryPage({super.key});
@@ -7,468 +11,439 @@ class ItineraryPage extends StatefulWidget {
   State<ItineraryPage> createState() => _ItineraryPageState();
 }
 
-class ItineraryScreen extends StatelessWidget {
-  const ItineraryScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Itinerary')),
-      body: const Center(
-        child: Text('Your itinerary goes here.'),
-      ),
-    );
-  }
-}
-
-
 class _ItineraryPageState extends State<ItineraryPage> {
-  int _selectedIndex = -1;
+  List<Itinerary> _itineraries = [];
+  Map<int, int> _currentStep = {}; // Track current day for each itinerary
 
-  final List<ItineraryCardData> _cardData = [
-    ItineraryCardData(
-      title: 'Before You Fly',
-      icon: Icons.flight_takeoff,
-      color: Colors.blue.shade600,
-      content: [
-        'Check passport validity (min 6 months)',
-        'Confirm flight details & check-in online',
-        'Purchase travel insurance',
-        'Notify your bank of travel plans',
-        'Make copies of important documents',
-        'Exchange currency or arrange travel card',
-        'Check weather forecast',
-        'Confirm hotel reservations',
-      ],
-    ),
-    ItineraryCardData(
-      title: 'Things To Know',
-      icon: Icons.info_outline,
-      color: Colors.indigo.shade400,
-      content: [
-        'Local emergency numbers: 911',
-        'Embassy contact: +1-555-123-4567',
-        'Local language: English',
-        'Currency: USD',
-        'Time zone: UTC-5',
-        'Tipping: 15-20%',
-        'Tap water is safe',
-        'Public transport: Subway, buses, rideshare',
-      ],
-    ),
-    ItineraryCardData(
-      title: 'Itinerary: Munnar',
-      icon: Icons.map_outlined,
-      color: Colors.green.shade400,
-      content: [
-        // We'll use a custom widget for this card in the detail view
-        // So keep this content list empty or with a placeholder
-      ],
-    ),
-    ItineraryCardData(
-      title: 'Budget & Tips',
-      icon: Icons.account_balance_wallet_outlined,
-      color: Colors.orange.shade400,
-      content: [
-        'Accommodation: \$150-200/night',
-        'Meals: \$50-80/day',
-        'Transport: \$30/day',
-        'Activities: \$200 total',
-        'Tips: Use public transport, city passes, free museum days',
-      ],
-    ),
-    ItineraryCardData(
-      title: 'Packing List',
-      icon: Icons.luggage_outlined,
-      color: Colors.red.shade400,
-      content: [
-        'Passport & ID',
-        'Flight tickets',
-        'Credit cards & cash',
-        'Phone & charger',
-        'Medications',
-        'Weather-appropriate clothes',
-        'Comfortable shoes',
-        'Toiletries',
-      ],
-    ),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadItineraries();
+  }
+
+  void _loadItineraries() {
+    // Mock JSON data (replace with API call in production)
+    const jsonString = '''
+    [
+      {
+        "id": 1758950263858,
+        "title": "Kerala blackwaters",
+        "image": "https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?q=80&w=1332&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+        "desc": "Explore the serene backwaters of Kerala.",
+        "rating": 0,
+        "destination": "Kerala, India",
+        "beforeyfly": {
+          "asdasdsad": "asdasdasdsadasd",
+          "asdsadasd": "asdasdsadasdasd",
+          "asdasdas": "dasdasdadsasd",
+          "sdfsfsdfsdf": "sdfsdfsdfd",
+          "sdfsdfsdf": "sdfsdfsdf"
+        },
+        "things2know": {
+          "sdfsdf": "sdfsdf",
+          "dfsdfsdfs": "dfsdfsdf",
+          "dfsdfsd": "fsdfsdf",
+          "sdfsdfs": "sfdfsdfsd"
+        },
+        "itinerary": {
+          "days": [
+            {
+              "day": 1,
+              "activities": [
+                {
+                  "time": "1",
+                  "title": "foiod",
+                  "description": "asdadasdasd",
+                  "icon": "Coffee"
+                },
+                {
+                  "time": "2",
+                  "title": "sdfsf",
+                  "description": "sdfdsfsdfsdfsdfdsf",
+                  "icon": "Coffee"
+                },
+                {
+                  "time": "3",
+                  "title": "cxvcv",
+                  "description": "vdsdv",
+                  "icon": "Landmark"
+                }
+              ]
+            },
+            {
+              "day": 2,
+              "activities": [
+                {
+                  "time": "1",
+                  "title": "sdsdf",
+                  "description": "sfdsdfdsfsdfsdfsdfsdfsdfdsfsdfdsf",
+                  "icon": "Coffee"
+                },
+                {
+                  "time": "2",
+                  "title": "sdvsdvsdvs",
+                  "description": "vsdvsdvdsvsdvsdvsdvsdvsdv",
+                  "icon": "Coffee"
+                },
+                {
+                  "time": "3",
+                  "title": "sdcvds",
+                  "description": "svsdvsdvsvsdvsdv",
+                  "icon": "Coffee"
+                }
+              ]
+            },
+            {
+              "day": 3,
+              "activities": [
+                {
+                  "time": "1",
+                  "title": "sdvsvs",
+                  "description": "svsdvsdvsdvdsv",
+                  "icon": "Coffee"
+                },
+                {
+                  "time": "2",
+                  "title": "sdfsdcsdvsvsdv",
+                  "description": "scsdfdsfdsfdsfsdf",
+                  "icon": "Coffee"
+                }
+              ]
+            }
+          ]
+        },
+        "budget": {
+          "total": "¥0",
+          "breakdown": {
+            "fsdfdsfds": "fsdfdfsdf",
+            "sdfsdfsdfs": "fsdf",
+            "dfsdfsdf": "sdfs",
+            "sdfsdf": "sdfsdf"
+          }
+        },
+        "packinglist": {
+          "sdfsfd": "sdfs",
+          "sdfdsf": "sdfsdf",
+          "sdfsdf": "sdfsdf",
+          "sdfdsf": "sdfsdf",
+          "essentials": [],
+          "clothing": [],
+          "extras": [
+            "sdfs",
+            "sdfsdf",
+            "sdfsdf",
+            "sdfsdf"
+          ]
+        },
+        "createdAt": "2025-09-27T05:17:43.858Z"
+      },
+      {
+        "id": 1758875035892,
+        "title": "Bali | 2D1N",
+        "image": "https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+        "desc": "This was a temple in Bali well known for the sunset’s it can produce...",
+        "rating": 0,
+        "destination": "Bali, Indonesi",
+        "beforeyfly": {
+          "asdadad": "sadasdasdaas",
+          "asdasdasd": "asdsada",
+          "asdasdad": "asdasda",
+          "asdasda": "adsasda",
+          "adasd": "asdasd"
+        },
+        "things2know": {
+          "asdsad": "asdasd",
+          "asdasd": "asdasd",
+          "sdasd": "asdasd"
+        },
+        "itinerary": {
+          "days": [
+            {
+              "day": 1,
+              "activities": [
+                {
+                  "time": "1:00 AM",
+                  "title": "Food",
+                  "description": "Food thitrha mathi",
+                  "icon": "Coffee"
+                },
+                {
+                  "time": "2",
+                  "title": "3",
+                  "description": "3",
+                  "icon": "Coffee"
+                }
+              ]
+            },
+            {
+              "day": 2,
+              "activities": [
+                {
+                  "time": "2",
+                  "title": "3",
+                  "description": "2",
+                  "icon": "Coffee"
+                },
+                {
+                  "time": "3",
+                  "title": "4",
+                  "description": "3",
+                  "icon": "Coffee"
+                }
+              ]
+            }
+          ]
+        },
+        "budget": {
+          "total": "¥0",
+          "breakdown": {
+            "asdasd": "asdasd",
+            "asdad": "asdsad"
+          }
+        },
+        "packinglist": {
+          "asdasda": "adasda",
+          "essentials": [],
+          "clothing": [],
+          "extras": [
+            "adasda"
+          ]
+        },
+        "createdAt": "2025-09-26T08:23:55.892Z"
+      }
+    ]
+    ''';
+    final List<dynamic> jsonData = jsonDecode(jsonString);
+    setState(() {
+      _itineraries = jsonData.map((item) => Itinerary.fromJson(item)).toList();
+      _currentStep = {for (var itinerary in _itineraries) itinerary.id: 0};
+    });
+  }
+
+  IconData _getIconForActivity(String iconName) {
+    switch (iconName.toLowerCase()) {
+      case 'coffee':
+        return Icons.local_cafe;
+      case 'landmark':
+        return Icons.account_balance;
+      default:
+        return Icons.event;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade100,
       appBar: AppBar(
+        title: const Text("Your Itineraries"),
+        centerTitle: true,
         backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
         elevation: 0,
-        title: const Text(
-          'Travel Planning',
-          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black87),
-          onPressed: () => Navigator.pushReplacementNamed(context, '/home'),
-        ),
       ),
-      body: _selectedIndex == -1
-          ? _buildCardsGridView(context)
-          : _buildDetailView(context, _selectedIndex),
-    );
-  }
-
-  Widget _buildCardsGridView(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
-    final crossAxisCount = width > 700 ? 2 : 1;
-
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: GridView.builder(
-        itemCount: _cardData.length,
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: crossAxisCount,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-          childAspectRatio: 1.6,
-        ),
-        itemBuilder: (context, index) {
-          final card = _cardData[index];
-          return GestureDetector(
-            onTap: () => setState(() => _selectedIndex = index),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(18),
-                boxShadow: [
-                  BoxShadow(
-                    color: card.color.withOpacity(0.08),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
+      body: _itineraries.isEmpty
+          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+          : ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: _itineraries.length,
+              itemBuilder: (context, index) {
+                final itinerary = _itineraries[index];
+                return Card(
+                  elevation: 4,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                ],
-              ),
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(card.icon, color: card.color, size: 32),
-                  const SizedBox(height: 12),
-                  Text(
-                    card.title,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: card.color,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  ...card.content
-                      .take(2)
-                      .map(
-                        (item) => Padding(
-                          padding: const EdgeInsets.only(bottom: 4),
-                          child: Text(
-                            '• $item',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.black87,
-                            ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Image
+                      ClipRRect(
+                        borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                        child: CachedNetworkImage(
+                          imageUrl: itinerary.image,
+                          height: 200,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => const Center(
+                            child: CircularProgressIndicator(color: AppColors.primary),
+                          ),
+                          errorWidget: (context, url, error) => const Icon(
+                            Icons.error,
+                            color: AppColors.error,
+                            size: 50,
                           ),
                         ),
                       ),
-                  if (card.content.length > 2)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 2),
-                      child: Text(
-                        '+${card.content.length - 2} more',
-                        style: TextStyle(
-                          color: card.color,
-                          fontWeight: FontWeight.w500,
-                          fontSize: 13,
+                      // Title and Destination
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              itinerary.title,
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              itinerary.destination,
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.blue.shade700,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            // Rating
+                            Row(
+                              children: List.generate(5, (i) {
+                                return Icon(
+                                  i < itinerary.rating ? Icons.star : Icons.star_border,
+                                  color: Colors.amber,
+                                  size: 20,
+                                );
+                              }),
+                            ),
+                            const SizedBox(height: 8),
+                            // Description
+                            Text(
+                              itinerary.desc,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: AppColors.textSecondary,
+                              ),
+                              maxLines: 3,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
                         ),
                       ),
-                    ),
-                ],
-              ),
+                      // Itinerary Days
+                      _buildStepperHeader(itinerary),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        height: 300,
+                        child: PageView.builder(
+                          controller: PageController(),
+                          itemCount: itinerary.days.length,
+                          onPageChanged: (pageIndex) {
+                            setState(() {
+                              _currentStep[itinerary.id] = pageIndex;
+                            });
+                          },
+                          itemBuilder: (context, pageIndex) {
+                            return _buildDayContent(itinerary.days[pageIndex]);
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
-          );
-        },
-      ),
     );
   }
 
-  Widget _buildDetailView(BuildContext context, int index) {
-    final card = _cardData[index];
+  Widget _buildStepperHeader(Itinerary itinerary) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: List.generate(itinerary.days.length, (index) {
+          final day = itinerary.days[index];
+          final isActive = index <= _currentStep[itinerary.id]!;
 
-    // Custom timeline for "Itinerary: Munnar"
-    if (card.title.startsWith('Itinerary')) {
-      return ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          _dayTimeline(
-            dayTitle: "Day 1, 10 Mar 2025",
-            activities: [
-              TimelineActivity(
-                icon: Icons.flight_land,
-                title: "Arrive at Kochi Airport",
-                time: "09:00 AM",
-              ),
-              TimelineActivity(
-                icon: Icons.hotel,
-                title: "Hotel Check In",
-                time: "11:00 AM",
-              ),
-              TimelineActivity(
-                icon: Icons.restaurant,
-                title: "Lunch at Saravana Bhavan",
-                time: "01:30 PM",
-                actionLabel: "View directions",
-                onAction: () {},
-              ),
-              TimelineActivity(
-                icon: Icons.nature,
-                title: "Visit Tea Gardens",
-                time: "04:00 PM",
-              ),
-              TimelineActivity(
-                icon: Icons.dinner_dining,
-                title: "Dinner at Rapsy Restaurant",
-                time: "08:00 PM",
-              ),
-            ],
-          ),
-          _dayTimeline(
-            dayTitle: "Day 2, 11 Mar 2025",
-            activities: [
-              TimelineActivity(
-                icon: Icons.breakfast_dining,
-                title: "Breakfast at Hotel",
-                time: "09:00 AM",
-              ),
-              TimelineActivity(
-                icon: Icons.park,
-                title: "Explore Eravikulam National Park",
-                time: "11:00 AM",
-              ),
-              TimelineActivity(
-                icon: Icons.shopping_bag,
-                title: "Shopping at Local Market",
-                time: "03:00 PM",
-              ),
-              TimelineActivity(
-                icon: Icons.dinner_dining,
-                title: "Dinner at Hotel",
-                time: "08:00 PM",
-              ),
-            ],
-          ),
-          _dayTimeline(
-            dayTitle: "Day 3, 12 Mar 2025",
-            activities: [
-              TimelineActivity(
-                icon: Icons.coffee,
-                title: "Breakfast & Checkout",
-                time: "09:00 AM",
-              ),
-              TimelineActivity(
-                icon: Icons.directions_bus,
-                title: "Depart for Kochi",
-                time: "10:00 AM",
-              ),
-            ],
-          ),
-        ],
-      );
-    }
-
-    return Column(
-      children: [
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
-          decoration: BoxDecoration(
-            color: card.color,
-            borderRadius: const BorderRadius.only(
-              bottomLeft: Radius.circular(32),
-              bottomRight: Radius.circular(32),
-            ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => setState(() => _selectedIndex = -1),
-                    child: const CircleAvatar(
-                      backgroundColor: Colors.white,
-                      radius: 18,
-                      child: Icon(Icons.arrow_back, color: Colors.black87),
-                    ),
-                  ),
-                  const Spacer(),
-                  Icon(card.icon, color: Colors.white, size: 32),
-                ],
-              ),
-              const SizedBox(height: 18),
-              Text(
-                card.title,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 26,
-                ),
-              ),
-            ],
-          ),
-        ),
-        Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.all(24),
-            itemCount: card.content.length,
-            itemBuilder: (context, i) => Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(Icons.check_circle_outline, color: card.color, size: 20),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      card.content[i],
-                      style: const TextStyle(
-                        fontSize: 16,
-                        color: Colors.black87,
+          return Expanded(
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    if (index != 0)
+                      Expanded(
+                        child: Container(
+                          height: 2,
+                          color: isActive ? AppColors.primary : Colors.grey.shade300,
+                        ),
+                      ),
+                    CircleAvatar(
+                      radius: 20,
+                      backgroundColor:
+                          isActive ? AppColors.primary : Colors.grey.shade200,
+                      child: Icon(
+                        Icons.looks_one, // Use dynamic icons if needed
+                        color: isActive ? Colors.white : Colors.grey,
                       ),
                     ),
+                    if (index != itinerary.days.length - 1)
+                      Expanded(
+                        child: Container(
+                          height: 2,
+                          color: (index < _currentStep[itinerary.id]!)
+                              ? AppColors.primary
+                              : Colors.grey.shade300,
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Day ${day.day}',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: isActive ? AppColors.primary : Colors.grey,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ),
-        ),
-      ],
+          );
+        }),
+      ),
     );
   }
 
-  Widget _dayTimeline({
-    required String dayTitle,
-    required List<TimelineActivity> activities,
-  }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 20),
+  Widget _buildDayContent(Day day) {
+    return Padding(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.green.shade100.withOpacity(0.15),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            dayTitle,
+            'Day ${day.day}',
             style: const TextStyle(
-              fontSize: 16,
+              fontSize: 22,
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: AppColors.primary,
             ),
           ),
-          const SizedBox(height: 12),
-          ...activities.map((activity) => _timelineTile(activity)).toList(),
-        ],
-      ),
-    );
-  }
-
-  Widget _timelineTile(TimelineActivity activity) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Column(
-            children: [
-              Icon(activity.icon, color: Colors.green.shade400, size: 24),
-              Container(width: 2, height: 32, color: Colors.green.shade100),
-            ],
-          ),
-          const SizedBox(width: 12),
+          const SizedBox(height: 16),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  activity.title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 15,
+            child: ListView.builder(
+              itemCount: day.activities.length,
+              itemBuilder: (context, index) {
+                final activity = day.activities[index];
+                return ListTile(
+                  leading: Icon(
+                    _getIconForActivity(activity.icon),
+                    color: AppColors.accent,
                   ),
-                ),
-                Text(
-                  activity.time,
-                  style: const TextStyle(fontSize: 13, color: Colors.grey),
-                ),
-                if (activity.actionLabel != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 6),
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green.shade400,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 18,
-                          vertical: 8,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 0,
-                      ),
-                      onPressed: activity.onAction,
-                      child: Text(activity.actionLabel!),
-                    ),
+                  title: Text(
+                    activity.title,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
-              ],
+                  subtitle: Text(
+                    '${activity.time}: ${activity.description}',
+                    style: const TextStyle(color: AppColors.textSecondary),
+                  ),
+                );
+              },
             ),
           ),
         ],
       ),
     );
   }
-}
-
-class ItineraryCardData {
-  final String title;
-  final IconData icon;
-  final Color color;
-  final List<String> content;
-
-  ItineraryCardData({
-    required this.title,
-    required this.icon,
-    required this.color,
-    required this.content,
-  });
-}
-
-class TimelineActivity {
-  final IconData icon;
-  final String title;
-  final String time;
-  final String? actionLabel;
-  final VoidCallback? onAction;
-
-  TimelineActivity({
-    required this.icon,
-    required this.title,
-    required this.time,
-    this.actionLabel,
-    this.onAction,
-  });
 }
