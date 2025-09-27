@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:ykstravels/package.dart'; // Add this import
 import 'view_model/view_model.dart' as view_model;
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
+import 'package:lottie/lottie.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 //reels
 class ReelsPage extends StatefulWidget {
@@ -26,6 +28,57 @@ class ItineraryStepsPage extends StatefulWidget {
 
   @override
   State<ItineraryStepsPage> createState() => _ItineraryStepsPageState();
+}
+
+//Loading animation
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: const LoadingScreen(),
+    );
+  }
+}
+
+class LoadingScreen extends StatefulWidget {
+  const LoadingScreen({super.key});
+
+  @override
+  _LoadingScreenState createState() => _LoadingScreenState();
+}
+
+class _LoadingScreenState extends State<LoadingScreen> {
+  bool _isLoading = true; // Simulates loading state
+
+  @override
+  void initState() {
+    super.initState();
+    // Simulate a loading process (e.g., fetching data)
+    Future.delayed(const Duration(seconds: 5), () {
+      setState(() {
+        _isLoading = false; // Stop loading after 5 seconds
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Lottie Loading Animation')),
+      body: Center(
+        child: _isLoading
+            ? Lottie.asset(
+                'assets/animations/loading.json', // Path to your Lottie file
+                width: 200,
+                height: 200,
+                fit: BoxFit.fill,
+              )
+            : const Text('Loading Complete!'),
+      ),
+    );
+  }
 }
 
 class _ItineraryStepsPageState extends State<ItineraryStepsPage> {

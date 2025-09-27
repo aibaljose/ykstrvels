@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 import 'package:ykstravels/view_model/view_model.dart';
+import '../widgets/loading_indicator.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -21,6 +23,13 @@ class _SplashScreenState extends State<SplashScreen>
   void initState() {
     super.initState();
 
+    // Preload Lottie animation to avoid delay
+    AssetLottie('assets/images/animations/Globe.lottie').load().then((composition) {
+      print('✅ Lottie preloaded: ${composition.duration}');
+    }).catchError((error) {
+      print('❌ Lottie preload error: $error');
+    });
+
     // Initialize animation controllers
     _fadeController = AnimationController(
       duration: const Duration(milliseconds: 1500),
@@ -41,31 +50,50 @@ class _SplashScreenState extends State<SplashScreen>
       CurvedAnimation(parent: _scaleController, curve: Curves.elasticOut),
     );
 
-    // Start animations
+    // Start animations and check login status
     _fadeController.forward();
-    _scaleController.forward();
-
-    // Check if user is logged in and navigate accordingly after animations
-    Future.delayed(const Duration(seconds: 3), () {
-      _checkLoginStatus();
+    _scaleController.forward().then((_) {
+      if (mounted) _checkLoginStatus(); // Start login check after logo animation
     });
   }
 
   Future<void> _checkLoginStatus() async {
     if (!mounted) return;
 
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      barrierColor: Colors.black54,
+      builder: (context) => const Dialog(
+        backgroundColor: Colors.transparent,
+        child: LoadingIndicator(),
+      ),
+    );
+
+    final startTime = DateTime.now();
+    const minLoadingDuration = Duration(milliseconds: 1500); // 1.5s for visibility
+
     try {
       bool isLoggedIn = await _viewModel.isUserLoggedIn();
-
+      final elapsed = DateTime.now().difference(startTime);
+      final remaining = minLoadingDuration - elapsed;
+      if (remaining > Duration.zero) {
+        await Future.delayed(remaining);
+      }
+      if (mounted) Navigator.pop(context);
       if (isLoggedIn) {
-        // User is logged in, navigate to home
         Navigator.pushReplacementNamed(context, '/home');
       } else {
-        // User is not logged in, navigate to signup
         Navigator.pushReplacementNamed(context, '/signup');
       }
     } catch (e) {
-      // In case of any errors, default to signup
+      print('Login check error: $e');
+      final elapsed = DateTime.now().difference(startTime);
+      final remaining = minLoadingDuration - elapsed;
+      if (remaining > Duration.zero) {
+        await Future.delayed(remaining);
+      }
+      if (mounted) Navigator.pop(context);
       Navigator.pushReplacementNamed(context, '/signup');
     }
   }

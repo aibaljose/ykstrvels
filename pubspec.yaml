@@ -39,6 +39,8 @@ dependencies:
   video_player: ^2.8.2   # (latest stable version as of now)
   youtube_player_flutter: 9.1.2
   flutter_inappwebview: ^6.0.0
+  lottie: ^3.1.2  # Use the latest version
+  connectivity_plus: ^5.0.2
 
 
 
@@ -67,7 +69,7 @@ flutter:
     - assets/images/logo.png
     - assets/images/card1.jpg
     - assets/images/card2.jpg
-
+    - assets/images/animations/Globe.lottie
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
