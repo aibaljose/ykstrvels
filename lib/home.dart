@@ -8,6 +8,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:ykstravels/view_model/itinerary_model.dart';
 import 'dart:convert';
 import 'itinerary.dart';
+import 'package:http/http.dart' as http;
 
 //reels
 class ReelsPage extends StatefulWidget {
@@ -456,233 +457,57 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
     });
   }
 
-  Future<void> _fetchData() async {
-    try {
-      const jsonString = '''
-      [
-        {
-          "id": 1758950263858,
-          "title": "Kerala blackwaters",
-          "image": "https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?q=80&w=1332&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-          "desc": "Explore the serene backwaters of Kerala.",
-          "rating": 0,
-          "destination": "Kerala, India",
-          "beforeyfly": {
-            "asdasdsad": "asdasdasdsadasd",
-            "asdsadasd": "asdasdsadasdasd",
-            "asdasdas": "dasdasdadsasd",
-            "sdfsfsdfsdf": "sdfsdfsdfd",
-            "sdfsdfsdf": "sdfsdfsdf"
-          },
-          "things2know": {
-            "sdfsdf": "sdfsdf",
-            "dfsdfsdfs": "dfsdfsdf",
-            "dfsdfsd": "fsdfsdf",
-            "sdfsdfs": "sfdfsdfsd"
-          },
-          "itinerary": {
-            "days": [
-              {
-                "day": 1,
-                "activities": [
-                  {
-                    "time": "1",
-                    "title": "foiod",
-                    "description": "asdadasdasd",
-                    "icon": "Coffee"
-                  },
-                  {
-                    "time": "2",
-                    "title": "sdfsf",
-                    "description": "sdfdsfsdfsdfsdfdsf",
-                    "icon": "Coffee"
-                  },
-                  {
-                    "time": "3",
-                    "title": "cxvcv",
-                    "description": "vdsdv",
-                    "icon": "Landmark"
-                  }
-                ]
-              },
-              {
-                "day": 2,
-                "activities": [
-                  {
-                    "time": "1",
-                    "title": "sdsdf",
-                    "description": "sfdsdfdsfsdfsdfsdfsdfsdfdsfsdfdsf",
-                    "icon": "Coffee"
-                  },
-                  {
-                    "time": "2",
-                    "title": "sdvsdvsdvs",
-                    "description": "vsdvsdvdsvsdvsdvsdvsdvsdv",
-                    "icon": "Coffee"
-                  },
-                  {
-                    "time": "3",
-                    "title": "sdcvds",
-                    "description": "svsdvsdvsvsdvsdv",
-                    "icon": "Coffee"
-                  }
-                ]
-              },
-              {
-                "day": 3,
-                "activities": [
-                  {
-                    "time": "1",
-                    "title": "sdvsvs",
-                    "description": "svsdvsdvsdvdsv",
-                    "icon": "Coffee"
-                  },
-                  {
-                    "time": "2",
-                    "title": "sdfsdcsdvsvsdv",
-                    "description": "scsdfdsfdsfdsfsdf",
-                    "icon": "Coffee"
-                  }
-                ]
-              }
-            ]
-          },
-          "budget": {
-            "total": "¥0",
-            "breakdown": {
-              "fsdfdsfds": "fsdfdfsdf",
-              "sdfsdfsdfs": "fsdf",
-              "dfsdfsdf": "sdfs",
-              "sdfsdf": "sdfsdf"
-            }
-          },
-          "packinglist": {
-            "sdfsfd": "sdfs",
-            "sdfdsdf": "sdfsdf",
-            "sdfsdf": "sdfsdf",
-            "sdfdsf": "sdfsdf",
-            "essentials": [],
-            "clothing": [],
-            "extras": [
-              "sdfs",
-              "sdfsdf",
-              "sdfsdf",
-              "sdfsdf"
-            ]
-          },
-          "createdAt": "2025-09-27T05:17:43.858Z"
-        },
-        {
-          "id": 1758875035892,
-          "title": "Bali | 2D1N",
-          "image": "https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-          "desc": "This was a temple in Bali well known for the sunset’s it can produce and trust me I was not the only person snapping this moment on their camera, If anything I wish I could go back to the location and try again but I tried multiple angle’s before getting this shot which I believe to be the best of my capabilities.",
-          "rating": 0,
-          "destination": "Bali, Indonesi",
-          "beforeyfly": {
-            "asdadad": "sadasdasdaas",
-            "asdasdasd": "asdsada",
-            "asdasdad": "asdasda",
-            "asdasda": "adsasda",
-            "adasd": "asdasd"
-          },
-          "things2know": {
-            "asdsad": "asdasd",
-            "asdasd": "asdasd",
-            "sdasd": "asdasd"
-          },
-          "itinerary": {
-            "days": [
-              {
-                "day": 1,
-                "activities": [
-                  {
-                    "time": "1:00 AM",
-                    "title": "Food",
-                    "description": "Food thitrha mathi",
-                    "icon": "Coffee"
-                  },
-                  {
-                    "time": "2",
-                    "title": "3",
-                    "description": "3",
-                    "icon": "Coffee"
-                  }
-                ]
-              },
-              {
-                "day": 2,
-                "activities": [
-                  {
-                    "time": "2",
-                    "title": "3",
-                    "description": "2",
-                    "icon": "Coffee"
-                  },
-                  {
-                    "time": "3",
-                    "title": "4",
-                    "description": "3",
-                    "icon": "Coffee"
-                  }
-                ]
-              }
-            ]
-          },
-          "budget": {
-            "total": "¥0",
-            "breakdown": {
-              "asdasd": "asdasd",
-              "asdad": "asdsad"
-            }
-          },
-          "packinglist": {
-            "asdasda": "adasda",
-            "essentials": [],
-            "clothing": [],
-            "extras": [
-              "adasda"
-            ]
-          },
-          "createdAt": "2025-09-26T08:23:55.892Z"
-        }
-      ]
-      ''';
-      print('JSON String length: ${jsonString.length}');
-      final List<dynamic> jsonData = jsonDecode(jsonString);
-      print('Parsed JSON items: ${jsonData.length}'); // Debug
+Future<void> _fetchData() async {
+  if (!mounted) return;
 
-      if (mounted) {
+  setState(() => _isLoading = true);
+
+  try {
+    final response = await http.get(
+      Uri.parse('https://ykstrip.in/user/getdata'),
+    );
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> jsonResponse = jsonDecode(response.body);
+
+      if (jsonResponse['status'] == 'success') {
+        final List<dynamic> jsonData = jsonResponse['data'];
+
+        final List<Itinerary> loadedItineraries = jsonData
+            .map((item) {
+              try {
+                return Itinerary.fromJson(item as Map<String, dynamic>);
+              } catch (e) {
+                print('Error parsing item: $e');
+                return null;
+              }
+            })
+            .where((item) => item != null)
+            .cast<Itinerary>()
+            .toList();
+
         setState(() {
-          _itineraries = jsonData
-              .map((item) {
-                try {
-                  final itinerary = Itinerary.fromJson(
-                    item as Map<String, dynamic>,
-                  );
-                  print('Successfully parsed: ${itinerary.title}'); // Debug
-                  return itinerary;
-                } catch (e) {
-                  print('Error parsing item: $e'); // Debug
-                  return null;
-                }
-              })
-              .where((item) => item != null)
-              .cast<Itinerary>()
-              .toList();
-
-          print('Total itineraries loaded: ${_itineraries.length}'); // Debug
+          _itineraries = loadedItineraries;
           _isLoading = false;
         });
+
+        print('Total itineraries loaded: ${_itineraries.length}');
+      } else {
+        print('API returned failure status');
+        setState(() => _isLoading = false);
       }
-    } catch (e) {
-      print('Error in _fetchData: $e'); // Debug
-      if (mounted) setState(() => _isLoading = false);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+    } else {
+      print('Failed to fetch data. Status code: ${response.statusCode}');
+      setState(() => _isLoading = false);
     }
+  } catch (e) {
+    print('Error in _fetchData: $e');
+    setState(() => _isLoading = false);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Error: $e')),
+    );
   }
+}
 
   Future<void> _loadUserProfile() async {
     try {
@@ -730,7 +555,7 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Travel Packages',
+          'Travel Itineraries',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
@@ -798,17 +623,17 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
             ),
           ),
           // Heart icon
-          Positioned(
-            top: 16,
-            right: 16,
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.7),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(Icons.favorite_border, color: Colors.grey.shade700),
-            ),
-          ),
+          // Positioned(
+          //   top: 16,
+          //   right: 16,
+          //   child: Container(
+          //     decoration: BoxDecoration(
+          //       color: Colors.white.withOpacity(0.7),
+          //       shape: BoxShape.circle,
+          //     ),
+          //     child: Icon(Icons.favorite_border, color: Colors.grey.shade700),
+          //   ),
+          // ),
           // Card content
           Positioned(
             left: 20,
@@ -963,163 +788,242 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
     }
   }
 
-  Widget _buildHomeContent() {
-    return Column(
-      children: [
-        // Header
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
-            children: [
-              Container(
+Widget _buildHomeContent() {
+  return Column(
+    children: [
+      // Header
+      Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.red.shade400,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.explore, color: Colors.white, size: 20),
+            ),
+            const Spacer(),
+            const Text(
+              'YKS Trips',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: Colors.black,
+              ),
+            ),
+            const Spacer(),
+            // Profile picture
+            GestureDetector(
+              onTap: () {
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (context) => Container(
+                    height: MediaQuery.of(context).size.height * 0.9,
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(20),
+                        topRight: Radius.circular(20),
+                      ),
+                    ),
+                    child: _buildProfileContent(),
+                  ),
+                );
+              },
+              child: Container(
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
                   color: Colors.red.shade400,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(Icons.explore, color: Colors.white, size: 20),
-              ),
-              const Spacer(),
-              const Text(
-                'Travel itinerary',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black,
-                ),
-              ),
-              const Spacer(),
-              // Profile picture from Google Sign-in
-              GestureDetector(
-                onTap: () {
-                  setState(() {
-                    // Show profile content in a modal bottom sheet
-                    showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      backgroundColor: Colors.transparent,
-                      builder: (context) => Container(
-                        height: MediaQuery.of(context).size.height * 0.9,
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(20),
-                            topRight: Radius.circular(20),
-                          ),
-                        ),
-                        child: _buildProfileContent(),
-                      ),
-                    );
-                  });
-                },
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: Colors.red.shade400,
-                    borderRadius: BorderRadius.circular(20),
-                    image: _profilePhotoUrl != null
-                        ? DecorationImage(
-                            image: NetworkImage(_profilePhotoUrl!),
-                            fit: BoxFit.cover,
-                          )
-                        : null,
-                  ),
-                  child: _profilePhotoUrl == null
-                      ? const Icon(
-                          Icons.person_outline,
-                          color: Colors.white,
-                          size: 20,
+                  borderRadius: BorderRadius.circular(20),
+                  image: _profilePhotoUrl != null
+                      ? DecorationImage(
+                          image: NetworkImage(_profilePhotoUrl!),
+                          fit: BoxFit.cover,
                         )
                       : null,
                 ),
-              ), // Balance the layout
+                child: _profilePhotoUrl == null
+                    ? const Icon(Icons.person_outline, color: Colors.white, size: 20)
+                    : null,
+              ),
+            ),
+          ],
+        ),
+      ),
+
+      // Search bar
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.grey.shade100,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: Colors.grey.shade300,
+              width: 1.0,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
             ],
           ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: Colors.grey.shade300, // light grey border
-                width: 1.0,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+          child: TextField(
+            decoration: InputDecoration(
+              hintText: 'Search destination...',
+              prefixIcon: Icon(Icons.search, color: Colors.blue.shade400),
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(vertical: 16),
             ),
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: 'Search destination...',
-                prefixIcon: Icon(Icons.search, color: Colors.blue.shade400),
-                border: InputBorder.none, // remove TextField’s own border
-                contentPadding: const EdgeInsets.symmetric(vertical: 16),
-              ),
-              onChanged: (value) {
-                // TODO: Implement search/filter logic
-              },
-            ),
+            onChanged: (value) {
+              // TODO: Implement search/filter logic
+            },
           ),
         ),
-        const SizedBox(height: 20),
-        // Tab selector
-        Padding(
+      ),
+
+      const SizedBox(height: 20),
+
+      // Tab selector
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        child: Row(
+          children: [
+            _buildTabButton('India', 0, selectedTab == 0),
+            const SizedBox(width: 12),
+            _buildTabButton('Dubai', 1, selectedTab == 1),
+            const SizedBox(width: 12),
+            _buildTabButton('Japan', 2, selectedTab == 2),
+          ],
+        ),
+      ),
+
+      const SizedBox(height: 20),
+
+      // Horizontal scrollable demo packages
+      Expanded(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildTabButton('India', 0, selectedTab == 0),
-              const SizedBox(width: 12),
-              _buildTabButton('Dubai', 1, selectedTab == 1),
-              const SizedBox(width: 12),
-              _buildTabButton('Japan', 2, selectedTab == 2),
+              const Text(
+                'Travel Packages',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 200,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: 5, // demo 5 cards
+                  separatorBuilder: (_, __) => const SizedBox(width: 16),
+                  itemBuilder: (context, index) => Container(
+                    width: 160,
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade100,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.flight, size: 40, color: Colors.blue.shade700),
+                        const SizedBox(height: 12),
+                        Text('Package ${index + 1}',
+                            style: const TextStyle(fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 8),
+                        const Text('3 Days / 2 Nights',
+                            style: TextStyle(fontSize: 12)),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              const Text(
+                'Featured Experiences',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 200,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: 5,
+                  separatorBuilder: (_, __) => const SizedBox(width: 16),
+                  itemBuilder: (context, index) => Container(
+                    width: 160,
+                    decoration: BoxDecoration(
+                      color: Colors.orange.shade100,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.landscape, size: 40, color: Colors.orange.shade700),
+                        const SizedBox(height: 12),
+                        Text('Experience ${index + 1}',
+                            style: const TextStyle(fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 8),
+                        const Text('2 Days / 1 Night', style: TextStyle(fontSize: 12)),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              const Text(
+                'Top Destinations',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 200,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: 5,
+                  separatorBuilder: (_, __) => const SizedBox(width: 16),
+                  itemBuilder: (context, index) => Container(
+                    width: 160,
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade100,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.location_on, size: 40, color: Colors.green.shade700),
+                        const SizedBox(height: 12),
+                        Text('Destination ${index + 1}',
+                            style: const TextStyle(fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 8),
+                        const Text('5 Days / 4 Nights', style: TextStyle(fontSize: 12)),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 80), // Bottom padding
             ],
           ),
         ),
-        const SizedBox(height: 20),
-        // Search bar
-        // Stories list
-        Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Dynamic trips from ViewModel
-                if (_itineraries.isEmpty)
-                  _buildEmptyState()
-                else
-                  ..._itineraries.map((itinerary) {
-                    print(
-                      'Rendering itinerary: ${itinerary.title}',
-                    ); // Add this debug line
-                    return Column(
-                      children: [
-                        _buildTripCard(
-                          title: itinerary.title,
-                          host: itinerary.destination,
-                          date: itinerary.createdAt,
-                          stories: [], // This might need to be populated
-                        ),
-                        const SizedBox(height: 24),
-                      ],
-                    );
-                  }),
-                const SizedBox(height: 80), // Extra space for bottom nav
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
+      ),
+    ],
+  );
+}
 
   Widget _buildTabButton(String text, int index, bool isSelected) {
     return GestureDetector(
@@ -1404,7 +1308,7 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
                 3,
               ),
               const SizedBox(width: 60), // Space for FAB
-              _buildNavItem(Icons.event, 'Events', _currentNavIndex == 1, 1),
+              _buildNavItem(Icons.event, 'Itinerary', _currentNavIndex == 1, 1),
               _buildNavItem(Icons.movie, 'Reels', _currentNavIndex == 4, 4),
             ],
           ),
@@ -1737,7 +1641,7 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Itinerary',
+          'Packages',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
@@ -2055,12 +1959,12 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
         children: [
           // Background image
           SizedBox(
-            height: 260,
+            height: 240,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(24),
               child: Image.network(
                 itinerary.image,
-                height: 260,
+                height: 240,
                 width: double.infinity,
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
@@ -2074,7 +1978,7 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
           ),
           // Overlay
           Container(
-            height: 260,
+            height: 240,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(24),
               gradient: LinearGradient(
@@ -2088,22 +1992,22 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
             ),
           ),
           // Heart icon
-          Positioned(
-            top: 16,
-            right: 16,
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.7),
-                shape: BoxShape.circle,
-              ),
-              child: IconButton(
-                icon: Icon(Icons.favorite_border, color: Colors.grey.shade700),
-                onPressed: () {
-                  // TODO: Implement favorite functionality
-                },
-              ),
-            ),
-          ),
+          // Positioned(
+          //   top: 16,
+          //   right: 16,
+          //   child: Container(
+          //     decoration: BoxDecoration(
+          //       color: Colors.white.withOpacity(0.7),
+          //       shape: BoxShape.circle,
+          //     ),
+          //     child: IconButton(
+          //       icon: Icon(Icons.favorite_border, color: Colors.grey.shade700),
+          //       onPressed: () {
+          //         // TODO: Implement favorite functionality
+          //       },
+          //     ),
+          //   ),
+          // ),
           // Rating badge
           if (itinerary.rating > 0)
             Positioned(
@@ -2209,7 +2113,7 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
                   width: double.infinity,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
+                      backgroundColor: const Color.fromARGB(142, 255, 255, 255),
                       foregroundColor: Colors.black,
                       elevation: 0,
                       shape: RoundedRectangleBorder(
@@ -2230,6 +2134,7 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
                       'Plan Your Trip',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
+                        color: Color.fromARGB(255, 255, 255, 255),
                         fontSize: 16,
                       ),
                     ),

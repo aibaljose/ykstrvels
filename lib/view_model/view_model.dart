@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -35,17 +36,94 @@ class StoryData {
 }
 
 class ViewModel {
+  // Firebase Phone Auth
+  String _verificationId = '';
+  int? _resendToken;
+
+  // Send OTP to phone number
+  Future<Map<String, dynamic>> verifyPhoneNumber(String phoneNumber) async {
+    try {
+      final completer = Completer<Map<String, dynamic>>();
+
+      await FirebaseAuth.instance.verifyPhoneNumber(
+        phoneNumber: phoneNumber,
+        verificationCompleted: (PhoneAuthCredential credential) async {
+          // Auto-verification completed (Android only)
+          await FirebaseAuth.instance.currentUser?.linkWithCredential(
+            credential,
+          );
+          completer.complete({
+            'status': 'auto-verified',
+            'message': 'Phone number automatically verified',
+          });
+        },
+        verificationFailed: (FirebaseAuthException e) {
+          completer.complete({
+            'status': 'error',
+            'message': e.message ?? 'Verification failed',
+          });
+        },
+        codeSent: (String verificationId, int? resendToken) {
+          _verificationId = verificationId;
+          _resendToken = resendToken;
+          completer.complete({
+            'status': 'code-sent',
+            'message': 'OTP sent to $phoneNumber',
+          });
+        },
+        codeAutoRetrievalTimeout: (String verificationId) {
+          _verificationId = verificationId;
+        },
+        forceResendingToken: _resendToken,
+      );
+
+      return completer.future;
+    } catch (e) {
+      return {'status': 'error', 'message': e.toString()};
+    }
+  }
+
+  // Verify the OTP code
+  Future<String> verifyOTPCode(String smsCode) async {
+    try {
+      if (_verificationId.isEmpty) {
+        return 'Verification failed: No verification ID';
+      }
+
+      // Create credential with verification ID and SMS code
+      final credential = PhoneAuthProvider.credential(
+        verificationId: _verificationId,
+        smsCode: smsCode,
+      );
+
+      // If user is already signed in, link the phone credential
+      if (FirebaseAuth.instance.currentUser != null) {
+        await FirebaseAuth.instance.currentUser!.linkWithCredential(credential);
+      } else {
+        // Otherwise sign in with the credential
+        await FirebaseAuth.instance.signInWithCredential(credential);
+      }
+
+      return "true";
+    } on FirebaseAuthException catch (e) {
+      return e.message ?? 'Verification failed';
+    } catch (e) {
+      return e.toString();
+    }
+  }
+
   Future<String> createUserAccountWithEmailAndPassword(
     String email,
     String name,
-    String password,
-  ) async {
+    String password, {
+    String? phoneNumber,
+  }) async {
     try {
       await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
-      await saveUserdata(name: name, email: email);
+      await saveUserdata(name: name, email: email, phoneNumber: phoneNumber);
       return "true";
     } on FirebaseAuthException catch (e) {
       return e.message.toString();
@@ -56,6 +134,7 @@ class ViewModel {
     required String name,
     required String email,
     String? photoUrl,
+    String? phoneNumber,
   }) async {
     try {
       Map<String, dynamic> userData = {"name": name, "email": email};
@@ -63,6 +142,11 @@ class ViewModel {
       // Add photo URL if available
       if (photoUrl != null && photoUrl.isNotEmpty) {
         userData["photoUrl"] = photoUrl;
+      }
+
+      // Add phone number if available
+      if (phoneNumber != null && phoneNumber.isNotEmpty) {
+        userData["phoneNumber"] = phoneNumber;
       }
 
       await FirebaseFirestore.instance

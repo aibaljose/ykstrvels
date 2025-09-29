@@ -166,7 +166,11 @@ class _LoginState extends State<Login> {
                 width: double.infinity,
                 height: 55,
                 child: OutlinedButton.icon(
-                  icon: Icon(Icons.g_mobiledata, size: 24, color: Colors.red),
+                  icon: Image.network(
+                    'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/1200px-Google_%22G%22_logo.svg.png',
+                    height: 24,
+                    width: 24,
+                  ),
                   label: const Text(
                     "Continue with Google",
                     style: TextStyle(

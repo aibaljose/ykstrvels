@@ -42,6 +42,8 @@ dependencies:
   lottie: ^3.1.2  # Use the latest version
   connectivity_plus: ^5.0.2
   cached_network_image: ^3.3.1
+  http: ^1.1.0
+
 
 
 
@@ -50,6 +52,7 @@ dependencies:
   cupertino_icons: ^1.0.8
 
 dev_dependencies:
+  flutter_launcher_icons: ^0.14.4
   flutter_test:
     sdk: flutter
 
@@ -62,6 +65,10 @@ dev_dependencies:
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/icon.png"
 
 # The following section is specific to Flutter packages.
 flutter:
