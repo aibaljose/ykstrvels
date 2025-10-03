@@ -9,6 +9,7 @@ import 'package:ykstravels/view_model/itinerary_model.dart';
 import 'dart:convert';
 import 'itinerary.dart';
 import 'package:http/http.dart' as http;
+import 'package:ykstravels/view_model/package_model.dart';
 
 //reels
 class ReelsPage extends StatefulWidget {
@@ -446,15 +447,163 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
   List<Itinerary> _itineraries = [];
   bool _isLoading = true;
   String? _profilePhotoUrl;
-
+  List<Package> _packages = [];
+  final bool _useMockData = true; // Set to false when API is ready
   @override
   void initState() {
     super.initState();
     _fetchData();
+    // Toggle between mock and real API
+    if (_useMockData) {
+      _loadMockPackages();
+    } else {
+      _fetchPackages();
+    }
     _loadUserProfile();
     Future.delayed(const Duration(seconds: 3), () {
       _showTrialOffer();
     });
+  }
+
+  //dynamic card
+  //mock data
+  void _loadMockPackages() {
+  // Mock data matching your API structure
+  final mockPackagesJson = [
+    {
+      "id": 1,
+      "package_name": "Kerala Backwaters Adventure",
+      "package_description": "Experience the serene beauty of Kerala's famous backwaters with traditional houseboat stays",
+      "package_price": "15000",
+      "overview": "Discover the tranquil backwaters of Kerala, cruise through palm-fringed canals, and experience authentic South Indian hospitality. This package includes houseboat stays, traditional meals, and guided tours of local villages.",
+      "highlight": "Luxury houseboat stay, Kathakali performance, Traditional Kerala cuisine, Ayurvedic spa",
+      "no_of_days": "3",
+      "locations": "Alleppey, Kumarakom, Vembanad Lake",
+      "discount_price": "12000",
+      "accommodation": "Premium houseboat + 3-star resort",
+      "meals": "All meals included (Breakfast, Lunch, Dinner)",
+      "transportation": "Private AC vehicle + Houseboat",
+      "image": "https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=800"
+    },
+    {
+      "id": 2,
+      "package_name": "Munnar Hill Station Escape",
+      "package_description": "Explore the misty tea plantations and scenic beauty of Munnar",
+      "package_price": "18000",
+      "overview": "Immerse yourself in the breathtaking landscapes of Munnar. Visit sprawling tea estates, spot wildlife in Eravikulam National Park, and enjoy the cool mountain air.",
+      "highlight": "Tea plantation tour, Wildlife safari, Waterfall visits, Photography spots",
+      "no_of_days": "4",
+      "locations": "Munnar, Thekkady, Vagamon",
+      "discount_price": "15500",
+      "accommodation": "4-star hill resort with valley view",
+      "meals": "Breakfast and Dinner",
+      "transportation": "Private SUV with experienced driver",
+      "image": "https://images.unsplash.com/photo-1598970434795-0c54fe7c0648?w=800"
+    },
+    {
+      "id": 3,
+      "package_name": "Goa Beach Paradise",
+      "package_description": "Sun, sand, and sea - the ultimate Goa beach experience",
+      "package_price": "22000",
+      "overview": "Relax on pristine beaches, enjoy water sports, explore Portuguese heritage, and experience Goa's vibrant nightlife. Perfect for couples and groups.",
+      "highlight": "Beach activities, Water sports, Casino cruise, Heritage tour",
+      "no_of_days": "5",
+      "locations": "North Goa, South Goa, Panjim",
+      "discount_price": null,
+      "accommodation": "Beach resort with pool",
+      "meals": "Breakfast included",
+      "transportation": "Bike rental + Airport transfers",
+      "image": "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=800"
+    },
+    {
+      "id": 4,
+      "package_name": "Rajasthan Royal Heritage",
+      "package_description": "Experience the grandeur of Rajasthan's palaces and forts",
+      "package_price": "35000",
+      "overview": "Journey through the land of kings. Visit magnificent forts, ornate palaces, and experience royal hospitality. Includes camel safari in Thar Desert.",
+      "highlight": "Palace hotels, Camel safari, Folk performances, Royal dining",
+      "no_of_days": "7",
+      "locations": "Jaipur, Udaipur, Jodhpur, Jaisalmer",
+      "discount_price": "29000",
+      "accommodation": "Heritage hotels and palace properties",
+      "meals": "Breakfast and traditional Rajasthani dinners",
+      "transportation": "Private car with driver",
+      "image": "https://images.unsplash.com/photo-1599661046289-e31897846e41?w=800"
+    },
+    {
+      "id": 5,
+      "package_name": "Manali Adventure Trek",
+      "package_description": "Thrilling mountain adventure in the Himalayas",
+      "package_price": "25000",
+      "overview": "Perfect for adventure enthusiasts. Includes trekking, paragliding, river rafting, and camping under the stars in the majestic Himalayas.",
+      "highlight": "Trekking, Paragliding, River rafting, Mountain camping",
+      "no_of_days": "6",
+      "locations": "Manali, Solang Valley, Rohtang Pass",
+      "discount_price": "21000",
+      "accommodation": "Mountain camps + Hotel",
+      "meals": "All meals included",
+      "transportation": "Volvo bus + Local jeep",
+      "image": "https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=800"
+    }
+  ];
+
+  // Parse mock data into Package objects
+  final List<Package> mockPackages = mockPackagesJson
+      .map((json) => Package.fromJson(json))
+      .toList();
+
+  setState(() {
+    _packages = mockPackages;
+    _isLoading = false;
+  });
+
+  print('Loaded ${_packages.length} mock packages');
+}
+
+  Future<void> _fetchPackages() async {
+    try {
+      final response = await http.get(
+        Uri.parse('https://ykstrip.in/user/getpackages'), // Update with your actual endpoint
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> jsonResponse = jsonDecode(response.body);
+
+        if (jsonResponse['status'] == 'success') {
+          final List<dynamic> jsonData = jsonResponse['data'];
+
+          final List<Package> loadedPackages = jsonData
+              .map((item) {
+                try {
+                  return Package.fromJson(item as Map<String, dynamic>);
+                } catch (e) {
+                  print('Error parsing package: $e');
+                  return null;
+                }
+              })
+              .where((item) => item != null)
+              .cast<Package>()
+              .toList();
+
+          if (mounted) {
+            setState(() {
+              _packages = loadedPackages;
+            });
+          }
+
+          print('Total packages loaded: ${_packages.length}');
+        }
+      } else {
+        print('Failed to fetch packages. Status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error in _fetchPackages: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading packages: $e')),
+        );
+      }
+    }
   }
 
 Future<void> _fetchData() async {
@@ -745,7 +894,282 @@ Future<void> _fetchData() async {
       ),
     );
   }
+  // Package Card Design Updated Dynamic 
+  Widget _buildDynamicPackageCard(Package package) {
+  // Use package image or fallback to placeholder
+  final imageUrl = package.image ?? 'https://picsum.photos/400/250';
+  
+  return Card(
+    elevation: 4,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+    clipBehavior: Clip.antiAlias,
+    child: InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => PackageDetailPage(
+              imageUrl: imageUrl,
+              title: package.packageName,
+              location: package.locations,
+              price: package.discountPriceValue > 0 
+                  ? package.discountPriceValue 
+                  : package.priceValue,
+              rating: 4.5, // You can add rating to package model if available
+              reviews: 0, // You can add reviews to package model if available
+              description: package.packageDescription,
+            ),
+          ),
+        );
+      },
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Image Section
+          Stack(
+            children: [
+              Image.network(
+                imageUrl,
+                height: 200,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    height: 200,
+                    color: Colors.grey[300],
+                    child: const Icon(Icons.image_not_supported, size: 50),
+                  );
+                },
+              ),
+              // Discount Badge
+              if (package.hasDiscount)
+                Positioned(
+                  top: 12,
+                  left: 12,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade600,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      '${((1 - package.discountPriceValue / package.priceValue) * 100).toInt()}% OFF',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ),
+              // Days Badge
+              Positioned(
+                top: 12,
+                right: 12,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.7),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    '${package.daysCount} Days',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
 
+          // Content Section
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Title
+                Text(
+                  package.packageName,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey.shade800,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 8),
+
+                // Location
+                Row(
+                  children: [
+                    Icon(Icons.location_on, size: 18, color: Colors.blue.shade600),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        package.locations,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey.shade600,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+
+                // Highlights
+                if (package.highlight.isNotEmpty)
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.amber.shade200),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.star, size: 16, color: Colors.amber.shade700),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            package.highlight,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.amber.shade900,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                const SizedBox(height: 12),
+
+                // Features Row
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    _buildFeatureChip(Icons.hotel, package.accommodation),
+                    _buildFeatureChip(Icons.restaurant, package.meals),
+                    _buildFeatureChip(Icons.directions_car, package.transportation),
+                  ],
+                ),
+                const SizedBox(height: 16),
+
+                // Price and Button Row
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Price
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (package.hasDiscount)
+                          Text(
+                            '₹${package.packagePrice}',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey.shade500,
+                              decoration: TextDecoration.lineThrough,
+                            ),
+                          ),
+                        Text(
+                          '₹${package.hasDiscount ? package.discountPrice : package.packagePrice}',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green.shade700,
+                          ),
+                        ),
+                        Text(
+                          'per person',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    // View Details Button
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => DynamicPackageDetailPage(
+                              package: package,
+                            ),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue.shade600,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'View Details',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+// Helper method for feature chips
+Widget _buildFeatureChip(IconData icon, String label) {
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+    decoration: BoxDecoration(
+      color: Colors.grey.shade100,
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(color: Colors.grey.shade300),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 14, color: Colors.grey.shade700),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            color: Colors.grey.shade700,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    ),
+  );
+}
   // itinerary card design component
   Widget _buildTag(IconData? icon, String label) {
     return Container(
@@ -780,7 +1204,7 @@ Future<void> _fetchData() async {
       case 2:
         return _buildPlacesContent();
       case 3:
-        return _buildEventsContent();
+        return _buildPackagesContent();
       case 4:
         return _buildReelsContent();
       default:
@@ -1301,13 +1725,7 @@ Widget _buildHomeContent() {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _buildNavItem(Icons.home, 'Home', _currentNavIndex == 0, 0),
-              _buildNavItem(
-                Icons.calendar_today,
-                'Package',
-                _currentNavIndex == 3,
-                3,
-              ),
-              const SizedBox(width: 60), // Space for FAB
+              _buildNavItem( Icons.calendar_today,'Package',_currentNavIndex == 3,3,), const SizedBox(width: 60), // Space for FAB
               _buildNavItem(Icons.event, 'Itinerary', _currentNavIndex == 1, 1),
               _buildNavItem(Icons.movie, 'Reels', _currentNavIndex == 4, 4),
             ],
@@ -1579,93 +1997,49 @@ Widget _buildHomeContent() {
   }
 
   // Events tab content
-  Widget _buildEventsContent() {
-    final events = [
-      {
-        "title": "Heart of Majestic Forests",
-        "location": "Norway's",
-        "imageUrl": "https://picsum.photos/400/250",
-      },
-      {
-        "title": "Sunny Beach Escape",
-        "location": "Maldives",
-        "imageUrl": "https://picsum.photos/400/251",
-      },
-      {
-        "title": "Sunny Beach Escape",
-        "location": "Maldives",
-        "imageUrl": "https://picsum.photos/400/251",
-      },
-      {
-        "title": "Sunny Beach Escape",
-        "location": "Maldives",
-        "imageUrl": "https://picsum.photos/400/251",
-      },
-      {
-        "title": "Sunny Beach Escape",
-        "location": "Maldives",
-        "imageUrl": "https://picsum.photos/400/251",
-      },
-      {
-        "title": "Sunny Beach Escape",
-        "location": "Maldives",
-        "imageUrl": "https://picsum.photos/400/251",
-      },
-      {
-        "title": "Sunny Beach Escape",
-        "location": "Maldives",
-        "imageUrl": "https://picsum.photos/400/251",
-      },
-      {
-        "title": "Sunny Beach Escape",
-        "location": "Maldives",
-        "imageUrl": "https://picsum.photos/400/251",
-      },
-      {
-        "title": "Sunny Beach Escape",
-        "location": "Maldives",
-        "imageUrl": "https://picsum.photos/400/251",
-      },
-      {
-        "title": "Sunny Beach Escape",
-        "location": "Maldives",
-        "imageUrl": "https://picsum.photos/400/251",
-      },
-      {
-        "title": "Sunny Beach Escape",
-        "location": "Maldives",
-        "imageUrl": "https://picsum.photos/400/251",
-      },
-    ];
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Packages',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
-        foregroundColor: const Color.fromARGB(255, 0, 0, 0),
-        elevation: 0,
+Widget _buildPackagesContent() {
+  return Scaffold(
+    appBar: AppBar(
+      title: const Text(
+        'Travel Packages',
+        style: TextStyle(fontWeight: FontWeight.bold),
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(12),
-        itemCount: events.length,
-        itemBuilder: (context, index) {
-          final event = events[index];
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
-            child: _buildEventCard(
-              event['title']!,
-              event['location']!,
-              event['imageUrl']!,
+      centerTitle: true,
+      backgroundColor: Colors.white,
+      foregroundColor: Colors.black,
+      elevation: 0,
+    ),
+    body: _packages.isEmpty
+        ? Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.card_travel, size: 80, color: Colors.grey.shade400),
+                const SizedBox(height: 16),
+                Text(
+                  'No packages available',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey.shade700,
+                  ),
+                ),
+              ],
             ),
-          );
-        },
-      ),
-    );
-  }
+          )
+        : ListView.builder(
+            padding: const EdgeInsets.all(12),
+            itemCount: _packages.length,
+            itemBuilder: (context, index) {
+              final package = _packages[index];
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: _buildDynamicPackageCard(package),
+              );
+            },
+          ),
+  );
+}
 
   Widget _buildEventCard(String title, String location, String imageUrl) {
     return Card(
@@ -1959,12 +2333,12 @@ Widget _buildHomeContent() {
         children: [
           // Background image
           SizedBox(
-            height: 240,
+            height: 260,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(24),
               child: Image.network(
                 itinerary.image,
-                height: 240,
+                height: 260,
                 width: double.infinity,
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
@@ -1978,7 +2352,7 @@ Widget _buildHomeContent() {
           ),
           // Overlay
           Container(
-            height: 240,
+            height: 260,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(24),
               gradient: LinearGradient(
@@ -2699,7 +3073,228 @@ class _DynamicItineraryStepsPageState extends State<DynamicItineraryStepsPage> {
     );
   }
 }
+//Package Card Essential Class Updated new 
+class DynamicPackageDetailPage extends StatelessWidget {
+  final Package package;
 
+  const DynamicPackageDetailPage({Key? key, required this.package}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final imageUrl = package.image ?? 'https://picsum.photos/400/300';
+    
+    return Scaffold(
+      body: CustomScrollView(
+        slivers: [
+          // App Bar with Image
+          SliverAppBar(
+            expandedHeight: 300,
+            pinned: true,
+            flexibleSpace: FlexibleSpaceBar(
+              title: Text(
+                package.packageName,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  shadows: [Shadow(color: Colors.black54, blurRadius: 8)],
+                ),
+              ),
+              background: Image.network(
+                imageUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(color: Colors.grey[300]);
+                },
+              ),
+            ),
+          ),
+
+          // Content
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Price Section
+                  Card(
+                    color: Colors.green.shade50,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (package.hasDiscount)
+                                Text(
+                                  '₹${package.packagePrice}',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    decoration: TextDecoration.lineThrough,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                ),
+                              Text(
+                                '₹${package.hasDiscount ? package.discountPrice : package.packagePrice}',
+                                style: TextStyle(
+                                  fontSize: 32,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.green.shade700,
+                                ),
+                              ),
+                              Text(
+                                'per person',
+                                style: TextStyle(color: Colors.grey.shade600),
+                              ),
+                            ],
+                          ),
+                          if (package.hasDiscount)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.red,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                'SAVE ₹${(package.priceValue - package.discountPriceValue).toInt()}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Overview
+                  _buildSection('Overview', package.overview, Icons.info_outline),
+
+                  // Highlights
+                  _buildSection('Highlights', package.highlight, Icons.star_border),
+
+                  // Details
+                  const Text(
+                    'Package Details',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 12),
+
+                  _buildDetailTile(Icons.calendar_today, 'Duration', '${package.noOfDays} Days'),
+                  _buildDetailTile(Icons.location_on, 'Locations', package.locations),
+                  _buildDetailTile(Icons.hotel, 'Accommodation', package.accommodation),
+                  _buildDetailTile(Icons.restaurant_menu, 'Meals', package.meals),
+                  _buildDetailTile(Icons.directions_car, 'Transportation', package.transportation),
+
+                  const SizedBox(height: 24),
+
+                  // Book Now Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        // Add booking logic
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Booking feature coming soon!')),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue.shade600,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: const Text(
+                        'Book Now',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSection(String title, String content, IconData icon) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, color: Colors.blue.shade600),
+            const SizedBox(width: 8),
+            Text(
+              title,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text(
+          content,
+          style: const TextStyle(fontSize: 15, height: 1.5),
+        ),
+        const SizedBox(height: 20),
+      ],
+    );
+  }
+
+  Widget _buildDetailTile(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.blue.shade50,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, size: 20, color: Colors.blue.shade600),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 class DetailContentPage extends StatelessWidget {
   final String title;
   final List<String> content;
