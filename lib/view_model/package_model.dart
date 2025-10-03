@@ -12,6 +12,7 @@ class Package {
   final String meals;
   final String transportation;
   final String? image; // Add if your API returns image URL
+  bool isFavorite;//package model to support favourites
 
   Package({
     this.id,
@@ -27,6 +28,7 @@ class Package {
     required this.meals,
     required this.transportation,
     this.image,
+    this.isFavorite = false,
   });
 
   factory Package.fromJson(Map<String, dynamic> json) {
@@ -44,6 +46,7 @@ class Package {
       meals: json['meals'] ?? '',
       transportation: json['transportation'] ?? '',
       image: json['image'],
+      isFavorite: json['is_favorite'] == 1 || json['is_favorite'] == true, // Handle both int and bool
     );
   }
 
