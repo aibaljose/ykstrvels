@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
-import 'package:ykstravels/theme.dart'; // For AppColors
+import 'package:yksworld/theme.dart'; // For AppColors
 
 class LoadingIndicator extends StatelessWidget {
   const LoadingIndicator({super.key});

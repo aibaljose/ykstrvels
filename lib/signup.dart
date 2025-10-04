@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ykstravels/view_model/view_model.dart';
+import 'package:yksworld/view_model/view_model.dart';
 
 class Signup extends StatefulWidget {
   const Signup({super.key});
@@ -98,7 +98,7 @@ class _SignupState extends State<Signup> {
                     Expanded(
                       flex: 1,
                       child: DropdownButtonFormField<String>(
-                        value: selectedCountryCode,
+                        initialValue: selectedCountryCode,
                         items: countryCodes.map((code) {
                           return DropdownMenuItem(
                             value: code,

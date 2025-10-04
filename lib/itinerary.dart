@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:ykstravels/view_model/itinerary_model.dart';
-import 'package:ykstravels/theme.dart'; // For AppColors
+import 'package:yksworld/view_model/itinerary_model.dart';
+import 'package:yksworld/theme.dart'; // For AppColors
 import 'dart:convert';
 
 class ItineraryPage extends StatefulWidget {

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ykstravels/view_model/view_model.dart';
+import 'package:yksworld/view_model/view_model.dart';
 import '../widgets/loading_indicator.dart'; // Add this import
 
 class Login extends StatefulWidget {

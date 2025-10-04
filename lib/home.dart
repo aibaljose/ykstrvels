@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:ykstravels/package.dart'; // Add this import
+import 'package:yksworld/package.dart'; // Add this import
 import 'view_model/view_model.dart' as view_model;
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'package:lottie/lottie.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:ykstravels/view_model/itinerary_model.dart';
+import 'package:yksworld/view_model/itinerary_model.dart';
 import 'dart:convert';
-import 'itinerary.dart';
 import 'package:http/http.dart' as http;
-import 'package:ykstravels/view_model/package_model.dart';
+import 'package:yksworld/view_model/package_model.dart';
 
 //reels
 class ReelsPage extends StatefulWidget {
@@ -1994,9 +1992,9 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
               onPressed: null, // Disable the button
               backgroundColor: Colors
                   .grey
-                  .shade400, // Use grey color to indicate disabled state
+                  .shade400,
+              elevation: 4, // Use grey color to indicate disabled state
               child: const Icon(Icons.search, color: Colors.white),
-              elevation: 4,
             ),
           ),
         ),
@@ -2964,7 +2962,7 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
                     if (itinerary.rating > 0)
                       _buildTag(Icons.star, '${itinerary.rating}.0'),
                     if (itinerary.rating > 0) const SizedBox(width: 8),
-                    _buildTag(null, '${totalDays} Days'),
+                    _buildTag(null, '$totalDays Days'),
                     const SizedBox(width: 8),
                     if (totalDays >= 3) _buildTag(null, 'Complete Package'),
                   ],
@@ -3070,8 +3068,7 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
 class DynamicTravelPlanningPage extends StatefulWidget {
   final Itinerary itinerary;
 
-  const DynamicTravelPlanningPage({Key? key, required this.itinerary})
-    : super(key: key);
+  const DynamicTravelPlanningPage({super.key, required this.itinerary});
 
   @override
   State<DynamicTravelPlanningPage> createState() =>
@@ -3287,8 +3284,7 @@ class _DynamicTravelPlanningPageState extends State<DynamicTravelPlanningPage> {
 class DynamicItineraryStepsPage extends StatefulWidget {
   final Itinerary itinerary;
 
-  const DynamicItineraryStepsPage({Key? key, required this.itinerary})
-    : super(key: key);
+  const DynamicItineraryStepsPage({super.key, required this.itinerary});
 
   @override
   State<DynamicItineraryStepsPage> createState() =>
@@ -3360,7 +3356,7 @@ class _DynamicItineraryStepsPageState extends State<DynamicItineraryStepsPage> {
   }
 
   Widget _buildStepperHeader(List<Day> days) {
-    return Container(
+    return SizedBox(
       height: 80,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
@@ -3569,10 +3565,10 @@ class DynamicPackageDetailPage extends StatefulWidget {
   final Function(bool)? onFavoriteToggled; // Add this callback parameter
 
   const DynamicPackageDetailPage({
-    Key? key,
+    super.key,
     required this.package,
     this.onFavoriteToggled,
-  }) : super(key: key);
+  });
 
   @override
   State<DynamicPackageDetailPage> createState() =>
@@ -3877,12 +3873,12 @@ class DetailContentPage extends StatelessWidget {
   final IconData icon;
 
   const DetailContentPage({
-    Key? key,
+    super.key,
     required this.title,
     required this.content,
     required this.color,
     required this.icon,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

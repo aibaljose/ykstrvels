@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
-import 'package:ykstravels/view_model/view_model.dart';
+import 'package:yksworld/view_model/view_model.dart';
 import '../widgets/loading_indicator.dart';
 
 class SplashScreen extends StatefulWidget {
