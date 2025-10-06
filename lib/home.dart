@@ -4,10 +4,12 @@ import 'package:yksworld/package.dart'; // Add this import
 import 'view_model/view_model.dart' as view_model;
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'package:lottie/lottie.dart';
+import 'package:lottie/lottie.dart';
 import 'package:yksworld/view_model/itinerary_model.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:yksworld/view_model/package_model.dart';
+import 'itinerary.dart';
 
 //reels
 class ReelsPage extends StatefulWidget {
@@ -450,19 +452,28 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
   List<Package> _favoritePackages = [];
   bool _isLoadingFavorites = false;
   String? userToken;
+  List<Itinerary> _favoriteItineraries = [];
+  bool _isLoadingFavoriteItineraries = false;
 
   @override
   void initState() {
     super.initState();
-    _fetchData();
+    _fetchData(); // This loads itineraries AND favorites
+
     // Toggle between mock and real API
-    if (_useMockData) {
-      _loadMockPackages();
-      _loadFavoritePackages(); // Add this for mini package card loading
-    } else {
+    // if (_useMockData) {
+    //   _loadMockPackages();
+    //   _loadFavoritePackages(); // For packages
+    // } else {
       _fetchPackages();
       _fetchFavoritePackages();
-    }
+    // }
+
+    // Remove the delayed call since _fetchData now handles it
+    // Future.delayed(const Duration(milliseconds: 500), () {
+    //   _loadFavoriteItineraries();
+    // });
+
     _loadUserProfile();
     Future.delayed(const Duration(seconds: 3), () {
       _showTrialOffer();
@@ -556,6 +567,61 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
         context,
       ).showSnackBar(SnackBar(content: Text(message)));
     }
+  }
+
+  // fav itinerary card home
+  // Add this method to _TravelStoriesPageState
+  void _loadFavoriteItineraries() {
+    print(
+      'Loading favorite itineraries. Total itineraries: ${_itineraries.length}',
+    );
+
+    if (_itineraries.isEmpty) {
+      setState(() => _favoriteItineraries = []);
+      print('No itineraries found, setting empty favorites list');
+      return;
+    }
+
+    setState(() {
+      // Get explicitly favorited itineraries
+      List<Itinerary> favorites = _itineraries
+          .where((i) => i.isFavorite)
+          .toList();
+      print('Found ${favorites.length} explicitly favorited itineraries');
+
+      // If no favorites or less than 2, use highest rated itineraries as fallback
+      if (favorites.isEmpty || favorites.length < 2) {
+        print('Using fallback: selecting top-rated itineraries');
+
+        // Sort by rating (highest first), then by days count
+        List<Itinerary> sortedItineraries = List.from(_itineraries);
+        sortedItineraries.sort((a, b) {
+          // First compare by rating
+          int ratingComparison = b.rating.compareTo(a.rating);
+          if (ratingComparison != 0) return ratingComparison;
+
+          // If ratings are equal, compare by number of days
+          int aDays = a.days?.length ?? 0;
+          int bDays = b.days?.length ?? 0;
+          return bDays.compareTo(aDays);
+        });
+
+        favorites = sortedItineraries.take(4).toList();
+        print('Selected ${favorites.length} top-rated itineraries as fallback');
+
+        // Debug: print details of selected itineraries
+        for (var itinerary in favorites) {
+          print(
+            'Selected: ${itinerary.destination} - Rating: ${itinerary.rating}, Days: ${itinerary.days.length}',
+          );
+        }
+      }
+
+      // Ensure we show maximum 4 itineraries
+      _favoriteItineraries = favorites.take(4).toList();
+    });
+
+    print('Final favorite itineraries count: ${_favoriteItineraries.length}');
   }
 
   //mock data
@@ -687,6 +753,8 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
     // Favorites will be loaded automatically after packages load
   }
 
+  // ...existing code...
+
   Future<void> _fetchPackages() async {
     try {
       final response = await http
@@ -702,7 +770,8 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
         final Map<String, dynamic> jsonResponse = jsonDecode(response.body);
 
         if (jsonResponse['status'] == 'success') {
-          final List<dynamic> jsonData = jsonResponse['data'];
+          final List<dynamic> jsonData =
+              jsonResponse['packages']; // Note: 'packages' instead of 'data'
 
           final List<Package> loadedPackages = jsonData
               .map((item) {
@@ -727,6 +796,8 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
           }
 
           print('Total packages loaded: ${_packages.length}');
+        } else {
+          print('API returned failure status: ${jsonResponse['message']}');
         }
       } else {
         print('Failed to fetch packages. Status code: ${response.statusCode}');
@@ -741,7 +812,10 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
     }
   }
 
+  // Fetch itineraries from API
+
   Future<void> _fetchData() async {
+    print('Starting to fetch itineraries...');
     if (!mounted) return;
 
     setState(() => _isLoading = true);
@@ -762,7 +836,7 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
                 try {
                   return Itinerary.fromJson(item as Map<String, dynamic>);
                 } catch (e) {
-                  print('Error parsing item: $e');
+                  print('Error parsing itinerary item: $e');
                   return null;
                 }
               })
@@ -770,14 +844,20 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
               .cast<Itinerary>()
               .toList();
 
-          setState(() {
-            _itineraries = loadedItineraries;
-            _isLoading = false;
-          });
+          if (mounted) {
+            setState(() {
+              _itineraries = loadedItineraries;
+              _isLoading = false;
+            });
+
+            // Load favorite itineraries immediately after itineraries are loaded
+            print('Itineraries loaded, now loading favorites...');
+            _loadFavoriteItineraries();
+          }
 
           print('Total itineraries loaded: ${_itineraries.length}');
         } else {
-          print('API returned failure status');
+          print('API returned failure status: ${jsonResponse['message']}');
           setState(() => _isLoading = false);
         }
       } else {
@@ -850,7 +930,7 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _itineraries.isEmpty
-          ? _buildEmptyState()
+          ? _buildEmptyItineraryState() // Updated method name
           : ListView.builder(
               padding: const EdgeInsets.all(12),
               itemCount: _itineraries.length,
@@ -862,6 +942,42 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
                 );
               },
             ),
+    );
+  }
+
+  // Add this new method specifically for itinerary empty state
+  Widget _buildEmptyItineraryState() {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 40),
+      alignment: Alignment.center,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.map_outlined, size: 80, color: Colors.grey.shade400),
+          const SizedBox(height: 16),
+          Text(
+            'No itineraries available',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey.shade700,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Travel itineraries will appear here',
+            style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+          ),
+          const SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: () {
+              // Trigger a refresh of the data
+              _fetchData();
+            },
+            child: const Text('Refresh'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -1593,50 +1709,70 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
                           ),
                         ),
 
+                  // Add this section in your _buildHomeContent() method, after the package mini cards section
+                  // Mini Itinerary Cards Section
+                  // In your _buildHomeContent() method, make sure this section exists:
                   const SizedBox(height: 24),
-
-                  const Text(
-                    'Featured Experiences',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    height: 200,
-                    child: ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: 5,
-                      separatorBuilder: (_, __) => const SizedBox(width: 16),
-                      itemBuilder: (context, index) => Container(
-                        width: 160,
-                        decoration: BoxDecoration(
-                          color: Colors.orange.shade100,
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.landscape,
-                              size: 40,
-                              color: Colors.orange.shade700,
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              'Experience ${index + 1}',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            const Text(
-                              '2 Days / 1 Night',
-                              style: TextStyle(fontSize: 12),
-                            ),
-                          ],
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Featured Itineraries',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                    ),
+                      TextButton(
+                        onPressed: () {
+                          setState(() {
+                            _currentNavIndex = 1; // Navigate to itineraries tab
+                          });
+                        },
+                        child: Text(
+                          'See All',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.blue.shade600,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
+                  const SizedBox(height: 12),
+
+                  // Horizontal Itinerary Cards
+                  _isLoadingFavoriteItineraries
+                      ? Container(
+                          height: 200,
+                          alignment: Alignment.center,
+                          child: const CircularProgressIndicator(),
+                        )
+                      : _favoriteItineraries.isEmpty
+                      ? Container(
+                          height: 200,
+                          alignment: Alignment.center,
+                          child: Text(
+                            'No featured itineraries available',
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontSize: 14,
+                            ),
+                          ),
+                        )
+                      : SizedBox(
+                          height: 200,
+                          child: ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            itemCount: _favoriteItineraries.length,
+                            itemBuilder: (context, index) {
+                              final itinerary = _favoriteItineraries[index];
+                              return _buildMiniItineraryCard(itinerary);
+                            },
+                          ),
+                        ),
 
                   const SizedBox(height: 24),
 
@@ -1990,9 +2126,7 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
           child: Center(
             child: FloatingActionButton(
               onPressed: null, // Disable the button
-              backgroundColor: Colors
-                  .grey
-                  .shade400,
+              backgroundColor: Colors.grey.shade400,
               elevation: 4, // Use grey color to indicate disabled state
               child: const Icon(Icons.search, color: Colors.white),
             ),
@@ -2002,7 +2136,216 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
     );
   }
 
+  // Mini Itinerary Card
+  // Add this method to _TravelStoriesPageState
+  // ...existing code...
+
+  Widget _buildMiniItineraryCard(Itinerary itinerary) {
+    final int totalDays = itinerary.days.length;
+
+    return Container(
+      width: 280,
+      height: 200,
+      margin: const EdgeInsets.only(right: 16),
+      child: Card(
+        elevation: 8,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) =>
+                    DynamicItineraryStepsPage(itinerary: itinerary),
+              ),
+            );
+          },
+          child: Stack(
+            children: [
+              // Background Image
+              ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Image.network(
+                  itinerary.image,
+                  width: double.infinity,
+                  height: double.infinity,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [Colors.blue.shade400, Colors.blue.shade700],
+                        ),
+                      ),
+                      child: Center(
+                        child: Icon(
+                          Icons.image_not_supported,
+                          color: Colors.white,
+                          size: 40,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+              // Gradient Overlay
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Colors.transparent, Colors.black.withOpacity(0.7)],
+                  ),
+                ),
+              ),
+
+              // Content
+              Positioned(
+                bottom: 16,
+                left: 16,
+                right: 16,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Destination
+                    Text(
+                      itinerary.destination,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+
+                    // Description
+                    Text(
+                      itinerary.desc.length > 60
+                          ? '${itinerary.desc.substring(0, 60)}...'
+                          : itinerary.desc,
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.9),
+                        fontSize: 12,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Tags Row
+                    Row(
+                      children: [
+                        if (itinerary.rating > 0) ...[
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.amber.withOpacity(0.8),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.star,
+                                  color: Colors.white,
+                                  size: 12,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${itinerary.rating}',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                        ],
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            '$totalDays Days',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              // Favorite Button (top right)
+              Positioned(
+                top: 8,
+                right: 8,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.3),
+                    shape: BoxShape.circle,
+                  ),
+                  child: IconButton(
+                    icon: Icon(
+                      itinerary.isFavorite
+                          ? Icons.favorite
+                          : Icons.favorite_border,
+                      color: itinerary.isFavorite ? Colors.red : Colors.white,
+                      size: 20,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        itinerary.isFavorite = !itinerary.isFavorite;
+                        _loadFavoriteItineraries();
+                      });
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            itinerary.isFavorite
+                                ? 'Added to favorites'
+                                : 'Removed from favorites',
+                          ),
+                          duration: const Duration(seconds: 1),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   //Mini packages card widget
+  // ...existing code...
+
   Widget _buildMiniPackageCard(Package package) {
     final imageUrl = package.image ?? 'https://picsum.photos/200/180';
 
@@ -2099,7 +2442,7 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    '${package.daysCount}D',
+                    '${package.daysCountInt}D',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 11,
@@ -2109,8 +2452,33 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
                 ),
               ),
 
-              // Discount Badge (Top Left) - if applicable
-              if (package.hasDiscount)
+              // Trending Badge (Top Left) - if applicable
+              if (package.isTrending)
+                Positioned(
+                  top: 8,
+                  left: 8,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.shade600,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Text(
+                      'TRENDING',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+
+              // Discount Badge (Top Left) - if applicable and not trending
+              if (package.hasDiscount && !package.isTrending)
                 Positioned(
                   top: 8,
                   left: 8,
@@ -2962,7 +3330,7 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
                     if (itinerary.rating > 0)
                       _buildTag(Icons.star, '${itinerary.rating}.0'),
                     if (itinerary.rating > 0) const SizedBox(width: 8),
-                    _buildTag(null, '$totalDays Days'),
+                    _buildTag(null, '${totalDays} Days'),
                     const SizedBox(width: 8),
                     if (totalDays >= 3) _buildTag(null, 'Complete Package'),
                   ],
@@ -3604,20 +3972,13 @@ class _DynamicPackageDetailPageState extends State<DynamicPackageDetailPage> {
                   color: Colors.white,
                 ),
                 onPressed: () {
-                  // Toggle favorite status in local state
                   setState(() {
                     _isFavorite = !_isFavorite;
                   });
-
-                  // IMPORTANT: Also update the actual package object
                   widget.package.isFavorite = _isFavorite;
-
-                  // Call the callback to update in parent
                   if (widget.onFavoriteToggled != null) {
                     widget.onFavoriteToggled!(_isFavorite);
                   }
-
-                  // Show confirmation
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(
@@ -3628,14 +3989,9 @@ class _DynamicPackageDetailPageState extends State<DynamicPackageDetailPage> {
                       duration: Duration(seconds: 1),
                     ),
                   );
-
-                  print(
-                    'Package ${widget.package.packageName} favorite status: $_isFavorite',
-                  );
                 },
               ),
             ],
-            // Keep existing flexibleSpace but update references to widget.package
             flexibleSpace: FlexibleSpaceBar(
               title: Text(
                 widget.package.packageName,
@@ -3744,7 +4100,7 @@ class _DynamicPackageDetailPageState extends State<DynamicPackageDetailPage> {
                   _buildDetailTile(
                     Icons.calendar_today,
                     'Duration',
-                    '${widget.package.noOfDays} Days',
+                    '${widget.package.daysCount} Days', // Changed from noOfDays to daysCount
                   ),
                   _buildDetailTile(
                     Icons.location_on,
@@ -3775,7 +4131,6 @@ class _DynamicPackageDetailPageState extends State<DynamicPackageDetailPage> {
                     height: 56,
                     child: ElevatedButton(
                       onPressed: () {
-                        // Add booking logic
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text('Booking feature coming soon!'),
@@ -3873,12 +4228,12 @@ class DetailContentPage extends StatelessWidget {
   final IconData icon;
 
   const DetailContentPage({
-    super.key,
+    Key? key,
     required this.title,
     required this.content,
     required this.color,
     required this.icon,
-  });
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

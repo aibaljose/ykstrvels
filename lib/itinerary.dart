@@ -11,9 +11,12 @@ class ItineraryPage extends StatefulWidget {
   State<ItineraryPage> createState() => _ItineraryPageState();
 }
 
+// ...existing code...
+
 class _ItineraryPageState extends State<ItineraryPage> {
   List<Itinerary> _itineraries = [];
-  Map<int, int> _currentStep = {}; // Track current day for each itinerary
+  Map<String, int> _currentStep =
+      {}; // Changed from Map<int, int> to Map<String, int>
 
   @override
   void initState() {
@@ -26,7 +29,7 @@ class _ItineraryPageState extends State<ItineraryPage> {
     const jsonString = '''
     [
       {
-        "id": 1758950263858,
+        "id": "1758950263858", // Change to string
         "title": "Kerala blackwaters",
         "image": "https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?q=80&w=1332&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
         "desc": "Explore the serene backwaters of Kerala.",
@@ -138,10 +141,10 @@ class _ItineraryPageState extends State<ItineraryPage> {
         "createdAt": "2025-09-27T05:17:43.858Z"
       },
       {
-        "id": 1758875035892,
+        "id": "1758875035892", // Change to string
         "title": "Bali | 2D1N",
         "image": "https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-        "desc": "This was a temple in Bali well known for the sunset’s it can produce...",
+        "desc": "This was a temple in Bali well known for the sunset's it can produce...",
         "rating": 0,
         "destination": "Bali, Indonesi",
         "beforeyfly": {
@@ -220,12 +223,21 @@ class _ItineraryPageState extends State<ItineraryPage> {
     });
   }
 
+  // Add more icon mappings
   IconData _getIconForActivity(String iconName) {
     switch (iconName.toLowerCase()) {
       case 'coffee':
         return Icons.local_cafe;
       case 'landmark':
         return Icons.account_balance;
+      case 'sunrise':
+        return Icons.wb_sunny;
+      case 'theater':
+        return Icons.theaters;
+      case 'hotel':
+        return Icons.hotel;
+      case 'car':
+        return Icons.directions_car;
       default:
         return Icons.event;
     }
@@ -242,7 +254,9 @@ class _ItineraryPageState extends State<ItineraryPage> {
         elevation: 0,
       ),
       body: _itineraries.isEmpty
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+          ? const Center(
+              child: CircularProgressIndicator(color: AppColors.primary),
+            )
           : ListView.builder(
               padding: const EdgeInsets.all(16),
               itemCount: _itineraries.length,
@@ -257,71 +271,7 @@ class _ItineraryPageState extends State<ItineraryPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Image
-                      ClipRRect(
-                        borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-                        child: CachedNetworkImage(
-                          imageUrl: itinerary.image,
-                          height: 200,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                          placeholder: (context, url) => const Center(
-                            child: CircularProgressIndicator(color: AppColors.primary),
-                          ),
-                          errorWidget: (context, url, error) => const Icon(
-                            Icons.error,
-                            color: AppColors.error,
-                            size: 50,
-                          ),
-                        ),
-                      ),
-                      // Title and Destination
-                      Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              itinerary.title,
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.textPrimary,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              itinerary.destination,
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.blue.shade700,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            // Rating
-                            Row(
-                              children: List.generate(5, (i) {
-                                return Icon(
-                                  i < itinerary.rating ? Icons.star : Icons.star_border,
-                                  color: Colors.amber,
-                                  size: 20,
-                                );
-                              }),
-                            ),
-                            const SizedBox(height: 8),
-                            // Description
-                            Text(
-                              itinerary.desc,
-                              style: const TextStyle(
-                                fontSize: 14,
-                                color: AppColors.textSecondary,
-                              ),
-                              maxLines: 3,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
-                      ),
+                      // ...existing image and content code...
                       // Itinerary Days
                       _buildStepperHeader(itinerary),
                       const SizedBox(height: 16),
@@ -354,7 +304,7 @@ class _ItineraryPageState extends State<ItineraryPage> {
       child: Row(
         children: List.generate(itinerary.days.length, (index) {
           final day = itinerary.days[index];
-          final isActive = index <= _currentStep[itinerary.id]!;
+          final isActive = index <= (_currentStep[itinerary.id] ?? 0);
 
           return Expanded(
             child: Column(
@@ -365,23 +315,29 @@ class _ItineraryPageState extends State<ItineraryPage> {
                       Expanded(
                         child: Container(
                           height: 2,
-                          color: isActive ? AppColors.primary : Colors.grey.shade300,
+                          color: isActive
+                              ? AppColors.primary
+                              : Colors.grey.shade300,
                         ),
                       ),
                     CircleAvatar(
                       radius: 20,
-                      backgroundColor:
-                          isActive ? AppColors.primary : Colors.grey.shade200,
-                      child: Icon(
-                        Icons.looks_one, // Use dynamic icons if needed
-                        color: isActive ? Colors.white : Colors.grey,
+                      backgroundColor: isActive
+                          ? AppColors.primary
+                          : Colors.grey.shade200,
+                      child: Text(
+                        '${day.day}',
+                        style: TextStyle(
+                          color: isActive ? Colors.white : Colors.grey,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                     if (index != itinerary.days.length - 1)
                       Expanded(
                         child: Container(
                           height: 2,
-                          color: (index < _currentStep[itinerary.id]!)
+                          color: (index < (_currentStep[itinerary.id] ?? 0))
                               ? AppColors.primary
                               : Colors.grey.shade300,
                         ),
@@ -404,6 +360,8 @@ class _ItineraryPageState extends State<ItineraryPage> {
       ),
     );
   }
+
+  // ...rest of the existing code remains the same...
 
   Widget _buildDayContent(Day day) {
     return Padding(
