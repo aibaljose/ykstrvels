@@ -11,6 +11,8 @@ import 'package:http/http.dart' as http;
 import 'package:yksworld/view_model/package_model.dart';
 import 'itinerary.dart';
 
+
+
 //reels
 class ReelsPage extends StatefulWidget {
   const ReelsPage({super.key});
@@ -95,9 +97,27 @@ class _ItineraryStepsPageState extends State<ItineraryStepsPage> {
     _currentStep = 0;
   }
 
+  // Helper method to get dynamic background images based on day
+  String _getDayBackgroundImage(int currentDay, int totalDays) {
+    final List<String> dayImages = [
+      'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800', // Day 1 - Mountain sunrise
+      'https://images.unsplash.com/photo-1501594907352-04cda38ebc29?w=800', // Day 2 - Beach
+      'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=800', // Day 3 - Landscape
+      'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800', // Day 4 - Mountain
+      'https://images.unsplash.com/photo-1439066615861-d1af74d74000?w=800', // Day 5 - Lake
+      'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=800', // Day 6 - Desert
+      'https://images.unsplash.com/photo-1445991842772-097fea258e7b?w=800', // Day 7+ - Forest
+    ];
+
+    if (currentDay < dayImages.length) {
+      return dayImages[currentDay];
+    } else {
+      return dayImages.last;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Use the passed itinerary or fall back to first itinerary from global list
     final itinerary = widget.itinerary;
     if (itinerary == null) {
       return Scaffold(
@@ -124,7 +144,7 @@ class _ItineraryStepsPageState extends State<ItineraryStepsPage> {
       body: Column(
         children: [
           const SizedBox(height: 20),
-          _buildStepperHeaderFixed(days),
+          _buildStepperHeader(days), // Use only this method name
           const SizedBox(height: 20),
           Expanded(
             child: PageView.builder(
@@ -137,7 +157,7 @@ class _ItineraryStepsPageState extends State<ItineraryStepsPage> {
               },
               itemBuilder: (context, index) {
                 final day = days[index];
-                return _buildDayContentFixed(day);
+                return _buildDayContent(day);
               },
             ),
           ),
@@ -146,127 +166,356 @@ class _ItineraryStepsPageState extends State<ItineraryStepsPage> {
     );
   }
 
-  Widget _buildStepperHeaderFixed(List<Day> days) {
-    return Row(
-      children: List.generate(days.length, (index) {
-        final day = days[index];
-        final isActive = index <= _currentStep;
-
-        return Expanded(
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  if (index != 0)
-                    Expanded(
-                      child: Container(
-                        height: 2,
-                        color: isActive
-                            ? Colors.deepPurple
-                            : Colors.grey.shade300,
-                      ),
-                    ),
-                  CircleAvatar(
-                    radius: 20,
-                    backgroundColor: isActive
-                        ? Colors.deepPurple
-                        : Colors.grey.shade200,
-                    child: Text(
-                      day.day.toString(),
-                      style: TextStyle(
-                        color: isActive ? Colors.white : Colors.grey,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  if (index != days.length - 1)
-                    Expanded(
-                      child: Container(
-                        height: 2,
-                        color: (index < _currentStep)
-                            ? Colors.deepPurple
-                            : Colors.grey.shade300,
-                      ),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 6),
-              Text(
-                'Day ${day.day}',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: isActive ? Colors.deepPurple : Colors.grey,
-                ),
-              ),
+  Widget _buildStepperHeader(List<Day> days) {
+    return Container(
+      height: 120,
+      decoration: BoxDecoration(
+        image: DecorationImage(
+          image: NetworkImage(
+            _getDayBackgroundImage(_currentStep, days.length),
+          ),
+          fit: BoxFit.cover,
+          colorFilter: ColorFilter.mode(
+            Colors.black.withOpacity(0.3),
+            BlendMode.darken,
+          ),
+        ),
+        borderRadius: const BorderRadius.only(
+          bottomLeft: Radius.circular(24),
+          bottomRight: Radius.circular(24),
+        ),
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.black.withOpacity(0.1),
+              Colors.black.withOpacity(0.4),
             ],
           ),
-        );
-      }),
+          borderRadius: const BorderRadius.only(
+            bottomLeft: Radius.circular(24),
+            bottomRight: Radius.circular(24),
+          ),
+        ),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+              child: Text(
+                days.isNotEmpty
+                    ? 'Day ${_currentStep + 1} of ${days.length}'
+                    : 'Itinerary Overview',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            Expanded(
+              child: Center(
+                child: SizedBox(
+                  height: 80,
+                  child: days.length == 1
+                      ? Center(child: _buildDayCircle(days[0], 0, true, true))
+                      : ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          padding: EdgeInsets.symmetric(
+                            horizontal: days.length <= 3
+                                ? (MediaQuery.of(context).size.width -
+                                          (days.length * 80)) /
+                                      2
+                                : 16,
+                          ),
+                          itemCount: days.length,
+                          itemBuilder: (context, index) {
+                            final day = days[index];
+                            final isActive = index <= _currentStep;
+                            final isCurrent = index == _currentStep;
+
+                            return Container(
+                              margin: const EdgeInsets.only(right: 16),
+                              child: _buildDayCircle(
+                                day,
+                                index,
+                                isActive,
+                                isCurrent,
+                              ),
+                            );
+                          },
+                        ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
-  Widget _buildDayContentFixed(Day day) {
+  // Helper method to build individual day circles - FIXED VERSION
+  Widget _buildDayCircle(Day day, int index, bool isActive, bool isCurrent) {
+    return GestureDetector(
+      onTap: () {
+        _pageController.animateToPage(
+          index,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+      },
+      child: Container(
+        width: 70,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 55,
+              height: 55,
+              decoration: BoxDecoration(
+                gradient: isCurrent
+                    ? LinearGradient(
+                        colors: [
+                          Colors.deepPurple.shade400,
+                          Colors.deepPurple.shade600,
+                        ],
+                      )
+                    : isActive
+                    ? LinearGradient(
+                        colors: [
+                          Colors.deepPurple.shade200,
+                          Colors.deepPurple.shade400,
+                        ],
+                      )
+                    : null,
+                color: !isActive ? Colors.white.withOpacity(0.3) : null,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: isCurrent
+                      ? Colors.white
+                      : isActive
+                      ? Colors.deepPurple.shade200
+                      : Colors.white.withOpacity(0.5),
+                  width: isCurrent ? 3 : 2,
+                ),
+                boxShadow: isCurrent
+                    ? [
+                        BoxShadow(
+                          color: Colors.deepPurple.withOpacity(0.4),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ]
+                    : [],
+              ),
+              child: Center(
+                child: Text(
+                  day.day.toString(),
+                  style: TextStyle(
+                    color: isActive
+                        ? Colors.white
+                        : Colors.white.withOpacity(0.7),
+                    fontWeight: FontWeight.bold,
+                    fontSize: isCurrent ? 20 : 18,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Day ${day.day}',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: isCurrent
+                    ? Colors.white
+                    : isActive
+                    ? Colors.white.withOpacity(0.9)
+                    : Colors.white.withOpacity(0.6),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDayContent(Day day) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Day ${day.day}',
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: Colors.deepPurple,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Day ${day.day}',
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.deepPurple,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.deepPurple.shade50,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  '${day.activities.length} activities',
+                  style: TextStyle(
+                    color: Colors.deepPurple.shade700,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           Expanded(
             child: day.activities.isEmpty
-                ? const Center(
-                    child: Text(
-                      "No activities planned for this day.",
-                      style: TextStyle(color: Colors.grey, fontSize: 16),
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.event_busy,
+                          size: 64,
+                          color: Colors.grey.shade400,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          "No activities planned for this day",
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 16,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          "Swipe to explore other days",
+                          style: TextStyle(
+                            color: Colors.grey.shade500,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
                     ),
                   )
                 : ListView.builder(
                     itemCount: day.activities.length,
                     itemBuilder: (context, index) {
                       final activity = day.activities[index];
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.1),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
                         ),
-                        elevation: 3,
                         child: ListTile(
-                          leading: CircleAvatar(
-                            backgroundColor: Colors.deepPurple.shade100,
+                          contentPadding: const EdgeInsets.all(16),
+                          leading: Container(
+                            width: 50,
+                            height: 50,
+                            decoration: BoxDecoration(
+                              color: Colors.deepPurple.shade50,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                             child: Icon(
                               _getActivityIcon(activity.icon),
                               color: Colors.deepPurple,
+                              size: 24,
                             ),
                           ),
                           title: Text(
                             activity.title,
-                            style: const TextStyle(fontWeight: FontWeight.w600),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
                           ),
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              const SizedBox(height: 4),
                               if (activity.time.isNotEmpty)
-                                Text(
-                                  'Time: ${activity.time}',
-                                  style: TextStyle(
-                                    color: Colors.blue.shade600,
-                                    fontSize: 12,
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue.shade50,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    activity.time,
+                                    style: TextStyle(
+                                      color: Colors.blue.shade700,
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 12,
+                                    ),
                                   ),
                                 ),
+                              const SizedBox(height: 8),
                               Text(
                                 activity.description,
-                                style: const TextStyle(fontSize: 13),
+                                style: TextStyle(
+                                  color: Colors.grey.shade700,
+                                  fontSize: 14,
+                                ),
                               ),
                             ],
+                          ),
+                          // REPLACE the numbered trailing container with image button
+                          trailing: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.blue.shade400,
+                                  Colors.blue.shade600,
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.blue.withOpacity(0.3),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: IconButton(
+                              icon: const Icon(
+                                Icons.photo_library,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                              onPressed: () {
+                                _showActivityImageSlideshow(
+                                  context,
+                                  activity,
+                                  day.day,
+                                  index,
+                                );
+                              },
+                            ),
                           ),
                         ),
                       );
@@ -278,6 +527,7 @@ class _ItineraryStepsPageState extends State<ItineraryStepsPage> {
     );
   }
 
+  // ADD THIS MISSING METHOD
   IconData _getActivityIcon(String iconName) {
     switch (iconName.toLowerCase()) {
       case 'coffee':
@@ -290,6 +540,12 @@ class _ItineraryStepsPageState extends State<ItineraryStepsPage> {
         return Icons.hotel;
       case 'transport':
         return Icons.directions_car;
+      case 'activity':
+        return Icons.local_activity;
+      case 'shopping':
+        return Icons.shopping_bag;
+      case 'sightseeing':
+        return Icons.camera_alt;
       default:
         return Icons.event;
     }
@@ -465,8 +721,8 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
     //   _loadMockPackages();
     //   _loadFavoritePackages(); // For packages
     // } else {
-      _fetchPackages();
-      _fetchFavoritePackages();
+    _fetchPackages();
+    _fetchFavoritePackages();
     // }
 
     // Remove the delayed call since _fetchData now handles it
@@ -930,14 +1186,16 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _itineraries.isEmpty
-          ? _buildEmptyItineraryState() // Updated method name
+          ? _buildEmptyItineraryState()
           : ListView.builder(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(8), // Reduced from 12
               itemCount: _itineraries.length,
               itemBuilder: (context, index) {
                 final itinerary = _itineraries[index];
                 return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  padding: const EdgeInsets.only(
+                    bottom: 8,
+                  ), // Reduced from 12-16
                   child: _buildDynamicItineraryCard(itinerary),
                 );
               },
@@ -1147,56 +1405,45 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
   }
 
   // Package Card Design Updated Dynamic
-  Widget _buildDynamicPackageCard(Package package) {
-    // Use package image or fallback to placeholder
-    final imageUrl = package.image ?? 'https://picsum.photos/400/250';
+ Widget _buildDynamicPackageCard(Package package) {
+  final imageUrl = package.image ?? 'https://picsum.photos/400/250';
 
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => DynamicPackageDetailPage(
-                package: package,
-                onFavoriteToggled: (isFavorite) {
-                  setState(() {
-                    // Find and update the package in the main list
-                    final index = _packages.indexWhere(
-                      (p) => p.id == package.id,
-                    );
-                    if (index >= 0) {
-                      _packages[index].isFavorite = isFavorite;
-                    }
-
-                    // Also update the package object directly
-                    package.isFavorite = isFavorite;
-
-                    // Reload favorites list to refresh home screen
-                    _loadFavoritePackages();
-                  });
-
-                  print(
-                    'Updated favorites list. New count: ${_favoritePackages.length}',
-                  );
-                },
-              ),
+  return Card(
+    elevation: 4,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+    clipBehavior: Clip.antiAlias,
+    child: InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => DynamicPackageDetailPage(
+              package: package,
+              onFavoriteToggled: (isFavorite) {
+                setState(() {
+                  final index = _packages.indexWhere((p) => p.id == package.id);
+                  if (index >= 0) {
+                    _packages[index].isFavorite = isFavorite;
+                  }
+                  package.isFavorite = isFavorite;
+                  _loadFavoritePackages();
+                });
+              },
             ),
-          );
-        },
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Image Section
-            Stack(
-              children: [
-                Image.network(
+          ),
+        );
+      },
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Image Section - FIXED HEIGHT
+          Stack(
+            children: [
+              SizedBox(
+                height: 200, // Fixed height to prevent dynamic sizing
+                width: double.infinity,
+                child: Image.network(
                   imageUrl,
-                  height: 200,
-                  width: double.infinity,
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) {
                     return Container(
@@ -1206,81 +1453,87 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
                     );
                   },
                 ),
-                // Discount Badge
-                if (package.hasDiscount)
-                  Positioned(
-                    top: 12,
-                    left: 12,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.red.shade600,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        '${((1 - package.discountPriceValue / package.priceValue) * 100).toInt()}% OFF',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                  ),
-                // Days Badge
+              ),
+              // Discount Badge
+              if (package.hasDiscount)
                 Positioned(
                   top: 12,
-                  right: 12,
+                  left: 12,
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.7),
+                      color: Colors.red.shade600,
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      '${package.daysCount} Days',
+                      '${((1 - package.discountPriceValue / package.priceValue) * 100).toInt()}% OFF',
                       style: const TextStyle(
                         color: Colors.white,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.bold,
                         fontSize: 12,
                       ),
                     ),
                   ),
                 ),
-              ],
-            ),
+              // Days Badge
+              Positioned(
+                top: 12,
+                right: 12,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.7),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    '${package.daysCount} Days',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
 
-            // Content Section
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Title
-                  Text(
+          // Content Section - FIXED OVERFLOW
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Title - CONSTRAINED HEIGHT
+                SizedBox(
+                  height: 50, // Fixed height for title
+                  child: Text(
                     package.packageName,
                     style: TextStyle(
-                      fontSize: 20,
+                      fontSize: 18, // Slightly reduced from 20
                       fontWeight: FontWeight.bold,
                       color: Colors.grey.shade800,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 8),
+                ),
+                const SizedBox(height: 8),
 
-                  // Location
-                  Row(
+                // Location - FIXED OVERFLOW
+                SizedBox(
+                  height: 20, // Fixed height
+                  child: Row(
                     children: [
                       Icon(
                         Icons.location_on,
-                        size: 18,
+                        size: 16, // Smaller icon
                         color: Colors.blue.shade600,
                       ),
                       const SizedBox(width: 4),
@@ -1288,7 +1541,7 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
                         child: Text(
                           package.locations,
                           style: TextStyle(
-                            fontSize: 14,
+                            fontSize: 13, // Smaller font
                             color: Colors.grey.shade600,
                           ),
                           maxLines: 1,
@@ -1297,191 +1550,225 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                ),
+                const SizedBox(height: 8),
 
-                  // Highlights
-                  if (package.highlight.isNotEmpty)
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.amber.shade50,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.amber.shade200),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.star,
-                            size: 16,
-                            color: Colors.amber.shade700,
-                          ),
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: Text(
-                              package.highlight,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.amber.shade900,
-                                fontWeight: FontWeight.w500,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
+                // Highlights - CONSTRAINED HEIGHT
+                if (package.highlight.isNotEmpty)
+                  Container(
+                    height: 50, // Fixed height
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.amber.shade200),
                     ),
-                  const SizedBox(height: 12),
-
-                  // Features Row
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      _buildFeatureChip(Icons.hotel, package.accommodation),
-                      _buildFeatureChip(Icons.restaurant, package.meals),
-                      _buildFeatureChip(
-                        Icons.directions_car,
-                        package.transportation,
-                      ),
-                    ],
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.star,
+                          size: 14, // Smaller icon
+                          color: Colors.amber.shade700,
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            package.highlight,
+                            style: TextStyle(
+                              fontSize: 11, // Smaller font
+                              color: Colors.amber.shade900,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 16),
+                const SizedBox(height: 12),
 
-                  // Price and Button Row
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                // Features Row - HORIZONTAL SCROLL TO PREVENT OVERFLOW
+                SizedBox(
+                  height: 30, // Fixed height
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        _buildFeatureChip(Icons.hotel, package.accommodation),
+                        const SizedBox(width: 8),
+                        _buildFeatureChip(Icons.restaurant, package.meals),
+                        const SizedBox(width: 8),
+                        _buildFeatureChip(Icons.directions_car, package.transportation),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Price and Button Row - COMPLETELY FIXED OVERFLOW
+                SizedBox(
+                  height: 60, // Fixed height for entire row
+                  child: Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      // Price
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (package.hasDiscount)
-                            Text(
-                              '₹${package.packagePrice}',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey.shade500,
-                                decoration: TextDecoration.lineThrough,
+                      // Price Section - CONSTRAINED WIDTH
+                      Expanded(
+                        flex: 3, // Give more space to price
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            if (package.hasDiscount)
+                              Text(
+                                '₹${package.packagePrice}',
+                                style: TextStyle(
+                                  fontSize: 12, // Smaller font
+                                  color: Colors.grey.shade500,
+                                  decoration: TextDecoration.lineThrough,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            Flexible(
+                              child: Text(
+                                '₹${package.hasDiscount ? package.discountPrice : package.packagePrice}',
+                                style: TextStyle(
+                                  fontSize: 20, // Reduced from 24
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.green.shade700,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                          Text(
-                            '₹${package.hasDiscount ? package.discountPrice : package.packagePrice}',
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.green.shade700,
+                            Text(
+                              'per person',
+                              style: TextStyle(
+                                fontSize: 10, // Smaller font
+                                color: Colors.grey.shade600,
+                              ),
                             ),
-                          ),
-                          Text(
-                            'per person',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey.shade600,
-                            ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
 
-                      // View Details Button
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => DynamicPackageDetailPage(
-                                package: package,
-                                onFavoriteToggled: (isFavorite) {
-                                  setState(() {
-                                    final index = _packages.indexWhere(
-                                      (p) => p.id == package.id,
-                                    );
-                                    if (index >= 0) {
-                                      _packages[index].isFavorite = isFavorite;
-                                    }
-                                    package.isFavorite = isFavorite;
-                                    _loadFavoritePackages();
-                                  });
-                                },
+                      const SizedBox(width: 8), // Reduced spacing
+
+                      // View Details Button - CONSTRAINED SIZE
+                      Flexible(
+                        flex: 2, // Constrain button width
+                        child: SizedBox(
+                          height: 40, // Fixed button height
+                          child: ElevatedButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => DynamicPackageDetailPage(
+                                    package: package,
+                                    onFavoriteToggled: (isFavorite) {
+                                      setState(() {
+                                        final index = _packages.indexWhere(
+                                          (p) => p.id == package.id,
+                                        );
+                                        if (index >= 0) {
+                                          _packages[index].isFavorite = isFavorite;
+                                        }
+                                        package.isFavorite = isFavorite;
+                                        _loadFavoritePackages();
+                                      });
+                                    },
+                                  ),
+                                ),
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blue.shade600,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16, // Reduced padding
+                                vertical: 8,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
                               ),
                             ),
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue.shade600,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 12,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: const Text(
-                          'View Details',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            child: const FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                'View Details',
+                                style: TextStyle(
+                                  fontSize: 12, // Smaller font
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
                           ),
                         ),
                       ),
                     ],
                   ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // Helper method for feature chips
-  Widget _buildFeatureChip(IconData icon, String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade300),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: Colors.grey.shade700),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              color: Colors.grey.shade700,
-              fontWeight: FontWeight.w500,
+                ),
+              ],
             ),
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
+
+  // Helper method for feature chips
+Widget _buildFeatureChip(IconData icon, String label) {
+  return Container(
+    height: 24, // Fixed height
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+    decoration: BoxDecoration(
+      color: Colors.grey.shade100,
+      borderRadius: BorderRadius.circular(12), // Smaller radius
+      border: Border.all(color: Colors.grey.shade300),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 12, color: Colors.grey.shade700), // Smaller icon
+        const SizedBox(width: 4),
+        Text(
+          label.length > 8 ? '${label.substring(0, 8)}...' : label, // Truncate long text
+          style: TextStyle(
+            fontSize: 10, // Smaller font
+            color: Colors.grey.shade700,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    ),
+  );
+}
 
   // itinerary card design component
   Widget _buildTag(IconData? icon, String label) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 8,
+        vertical: 4,
+      ), // Reduced padding
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.18),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
+        mainAxisSize: MainAxisSize.min, // Important: prevents tag overflow
         children: [
-          if (icon != null) Icon(icon, color: Colors.white, size: 14),
-          if (icon != null) const SizedBox(width: 4),
+          if (icon != null)
+            Icon(icon, color: Colors.white, size: 12), // Reduced from 14
+          if (icon != null) const SizedBox(width: 3), // Reduced from 4
           Text(
             label,
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 13,
+              fontSize: 11, // Reduced from 13
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -1506,6 +1793,8 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
         return _buildHomeContent();
     }
   }
+
+  // containerized home section
 
   Widget _buildHomeContent() {
     return RefreshIndicator(
@@ -1637,185 +1926,503 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
 
           const SizedBox(height: 20),
 
-          // Horizontal scrollable demo packages Dynamic mini package card updated
+          // Main Content Area
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Section Header with "See All"
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Featured Packages',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
+                  // Featured Packages Section - Containerized
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 20),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.08),
+                          blurRadius: 15,
+                          offset: const Offset(0, 4),
+                          spreadRadius: 2,
                         ),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          setState(() {
-                            _currentNavIndex = 3; // Navigate to packages tab
-                          });
-                        },
-                        child: Text(
-                          'See All',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.blue.shade600,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Horizontal Package Cards
-                  // Update the horizontal package card section in _buildHomeContent()
-                  // Horizontal Package Cards New one
-                  _isLoadingFavorites
-                      ? Container(
-                          height: 220,
-                          alignment: Alignment.center,
-                          child: CircularProgressIndicator(),
-                        )
-                      : _favoritePackages.isEmpty
-                      ? Container(
-                          height: 220,
-                          alignment: Alignment.center,
-                          child: Text(
-                            'No featured packages available',
-                            style: TextStyle(
-                              color: Colors.grey.shade600,
-                              fontSize: 14,
-                            ),
-                          ),
-                        )
-                      : SizedBox(
-                          height: 220,
-                          child: ListView.separated(
-                            scrollDirection: Axis.horizontal,
-                            itemCount: _favoritePackages.length,
-                            separatorBuilder: (_, __) =>
-                                const SizedBox(width: 16),
-                            itemBuilder: (context, index) {
-                              final package = _favoritePackages[index];
-                              return _buildMiniPackageCard(package);
-                            },
-                          ),
-                        ),
-
-                  // Add this section in your _buildHomeContent() method, after the package mini cards section
-                  // Mini Itinerary Cards Section
-                  // In your _buildHomeContent() method, make sure this section exists:
-                  const SizedBox(height: 24),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Featured Itineraries',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          setState(() {
-                            _currentNavIndex = 1; // Navigate to itineraries tab
-                          });
-                        },
-                        child: Text(
-                          'See All',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.blue.shade600,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Horizontal Itinerary Cards
-                  _isLoadingFavoriteItineraries
-                      ? Container(
-                          height: 200,
-                          alignment: Alignment.center,
-                          child: const CircularProgressIndicator(),
-                        )
-                      : _favoriteItineraries.isEmpty
-                      ? Container(
-                          height: 200,
-                          alignment: Alignment.center,
-                          child: Text(
-                            'No featured itineraries available',
-                            style: TextStyle(
-                              color: Colors.grey.shade600,
-                              fontSize: 14,
-                            ),
-                          ),
-                        )
-                      : SizedBox(
-                          height: 200,
-                          child: ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            itemCount: _favoriteItineraries.length,
-                            itemBuilder: (context, index) {
-                              final itinerary = _favoriteItineraries[index];
-                              return _buildMiniItineraryCard(itinerary);
-                            },
-                          ),
-                        ),
-
-                  const SizedBox(height: 24),
-
-                  const Text(
-                    'Top Destinations',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    height: 200,
-                    child: ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: 5,
-                      separatorBuilder: (_, __) => const SizedBox(width: 16),
-                      itemBuilder: (context, index) => Container(
-                        width: 160,
-                        decoration: BoxDecoration(
-                          color: Colors.green.shade100,
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                      ],
+                      border: Border.all(color: Colors.grey.shade200, width: 1),
+                    ),
+                    child: Column(
+                      children: [
+                        // Section Header with "See All"
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Icon(
-                              Icons.location_on,
-                              size: 40,
-                              color: Colors.green.shade700,
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue.shade50,
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Icon(
+                                    Icons.card_travel,
+                                    color: Colors.blue.shade600,
+                                    size: 20,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                const Text(
+                                  'Featured Packages',
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: 12),
-                            Text(
-                              'Destination ${index + 1}',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
                               ),
-                            ),
-                            const SizedBox(height: 8),
-                            const Text(
-                              '5 Days / 4 Nights',
-                              style: TextStyle(fontSize: 12),
+                              decoration: BoxDecoration(
+                                color: Colors.blue.shade50,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: Colors.blue.shade200,
+                                  width: 1,
+                                ),
+                              ),
+                              child: TextButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _currentNavIndex =
+                                        3; // Navigate to packages tab
+                                  });
+                                },
+                                style: TextButton.styleFrom(
+                                  padding: EdgeInsets.zero,
+                                  minimumSize: Size.zero,
+                                  tapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      'See All',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.blue.shade700,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Icon(
+                                      Icons.arrow_forward_ios,
+                                      size: 12,
+                                      color: Colors.blue.shade700,
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
                           ],
                         ),
-                      ),
+
+                        const SizedBox(height: 16),
+
+                        // Horizontal Package Cards
+                        _isLoadingFavorites
+                            ? Container(
+                                height: 220,
+                                alignment: Alignment.center,
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    CircularProgressIndicator(
+                                      color: Colors.blue.shade600,
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Text(
+                                      'Loading packages...',
+                                      style: TextStyle(
+                                        color: Colors.grey.shade600,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : _favoritePackages.isEmpty
+                            ? Container(
+                                height: 220,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade50,
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: Colors.grey.shade200,
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(16),
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey.shade200,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Icon(
+                                        Icons.card_travel,
+                                        size: 32,
+                                        color: Colors.grey.shade500,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Text(
+                                      'No featured packages available',
+                                      style: TextStyle(
+                                        color: Colors.grey.shade600,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'Check back later for exciting deals',
+                                      style: TextStyle(
+                                        color: Colors.grey.shade500,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : SizedBox(
+                                height: 220,
+                                child: ListView.separated(
+                                  scrollDirection: Axis.horizontal,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 4,
+                                  ),
+                                  itemCount: _favoritePackages.length,
+                                  separatorBuilder: (_, __) =>
+                                      const SizedBox(width: 16),
+                                  itemBuilder: (context, index) {
+                                    final package = _favoritePackages[index];
+                                    return _buildMiniPackageCard(package);
+                                  },
+                                ),
+                              ),
+                      ],
+                    ),
+                  ),
+
+                  // Featured Itineraries Section - Containerized
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 20),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.08),
+                          blurRadius: 15,
+                          offset: const Offset(0, 4),
+                          spreadRadius: 2,
+                        ),
+                      ],
+                      border: Border.all(color: Colors.grey.shade200, width: 1),
+                    ),
+                    child: Column(
+                      children: [
+                        // Section Header
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.green.shade50,
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Icon(
+                                    Icons.map_outlined,
+                                    color: Colors.green.shade600,
+                                    size: 20,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                const Text(
+                                  'Featured Itineraries',
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.green.shade50,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: Colors.green.shade200,
+                                  width: 1,
+                                ),
+                              ),
+                              child: TextButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _currentNavIndex =
+                                        1; // Navigate to itineraries tab
+                                  });
+                                },
+                                style: TextButton.styleFrom(
+                                  padding: EdgeInsets.zero,
+                                  minimumSize: Size.zero,
+                                  tapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      'See All',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.green.shade700,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Icon(
+                                      Icons.arrow_forward_ios,
+                                      size: 12,
+                                      color: Colors.green.shade700,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        // Horizontal Itinerary Cards
+                        _isLoadingFavoriteItineraries
+                            ? Container(
+                                height: 200,
+                                alignment: Alignment.center,
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    CircularProgressIndicator(
+                                      color: Colors.green.shade600,
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Text(
+                                      'Loading itineraries...',
+                                      style: TextStyle(
+                                        color: Colors.grey.shade600,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : _favoriteItineraries.isEmpty
+                            ? Container(
+                                height: 200,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade50,
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: Colors.grey.shade200,
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(16),
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey.shade200,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Icon(
+                                        Icons.map_outlined,
+                                        size: 32,
+                                        color: Colors.grey.shade500,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Text(
+                                      'No featured itineraries available',
+                                      style: TextStyle(
+                                        color: Colors.grey.shade600,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'Discover amazing travel plans soon',
+                                      style: TextStyle(
+                                        color: Colors.grey.shade500,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : SizedBox(
+                                height: 200,
+                                child: ListView.builder(
+                                  scrollDirection: Axis.horizontal,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 4,
+                                  ),
+                                  itemCount: _favoriteItineraries.length,
+                                  itemBuilder: (context, index) {
+                                    final itinerary =
+                                        _favoriteItineraries[index];
+                                    return Container(
+                                      margin: const EdgeInsets.only(right: 16),
+                                      child: _buildMiniItineraryCard(itinerary),
+                                    );
+                                  },
+                                ),
+                              ),
+                      ],
+                    ),
+                  ),
+
+                  // Top Destinations Section - Containerized
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 20),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.08),
+                          blurRadius: 15,
+                          offset: const Offset(0, 4),
+                          spreadRadius: 2,
+                        ),
+                      ],
+                      border: Border.all(color: Colors.grey.shade200, width: 1),
+                    ),
+                    child: Column(
+                      children: [
+                        // Section Header
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.purple.shade50,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Icon(
+                                Icons.location_on,
+                                color: Colors.purple.shade600,
+                                size: 20,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            const Text(
+                              'Top Destinations',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        // Horizontal Destination Cards
+                        SizedBox(
+                          height: 200,
+                          child: ListView.separated(
+                            scrollDirection: Axis.horizontal,
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                            itemCount: 5,
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(width: 16),
+                            itemBuilder: (context, index) => Container(
+                              width: 160,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    Colors.green.shade100,
+                                    Colors.green.shade200,
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: Colors.green.shade300,
+                                  width: 1,
+                                ),
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.8),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      Icons.location_on,
+                                      size: 40,
+                                      color: Colors.green.shade700,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    'Destination ${index + 1}',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.green.shade800,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    '5 Days / 4 Nights',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.green.shade700,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
 
@@ -2138,7 +2745,6 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
 
   // Mini Itinerary Card
   // Add this method to _TravelStoriesPageState
-  // ...existing code...
 
   Widget _buildMiniItineraryCard(Itinerary itinerary) {
     final int totalDays = itinerary.days.length;
@@ -2153,14 +2759,16 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
           onTap: () {
+            // Navigate to the intermediate planning page first
             Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) =>
-                    DynamicItineraryStepsPage(itinerary: itinerary),
+                    DynamicTravelPlanningPage(itinerary: itinerary),
               ),
             );
           },
+          // ...rest of the existing code remains the same...
           child: Stack(
             children: [
               // Background Image
@@ -2347,7 +2955,7 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
   // ...existing code...
 
   Widget _buildMiniPackageCard(Package package) {
-    final imageUrl = package.image ?? 'https://picsum.photos/200/180';
+    final imageUrl = package.image ?? 'https://picsum.photos/200/200';
 
     return GestureDetector(
       onTap: () {
@@ -2358,240 +2966,277 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
               package: package,
               onFavoriteToggled: (isFavorite) {
                 setState(() {
-                  // Find and update the package in the main list
                   final index = _packages.indexWhere((p) => p.id == package.id);
                   if (index >= 0) {
                     _packages[index].isFavorite = isFavorite;
                   }
-
-                  // Also update the package object directly
                   package.isFavorite = isFavorite;
-
-                  // Reload favorites list to refresh home screen
                   _loadFavoritePackages();
                 });
-
-                print(
-                  'Updated favorites list. New count: ${_favoritePackages.length}',
-                );
               },
             ),
           ),
         );
       },
       child: Container(
-        width: 180,
+        width: 178, // Match the actual constraint width
+        height: 218, // Match the actual constraint height
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.grey.shade300, width: 1),
+          color: Colors.white,
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(16),
-          child: Stack(
+          borderRadius: BorderRadius.circular(19),
+          child: Column(
+            mainAxisSize: MainAxisSize.min, // Important: prevents overflow
             children: [
-              // Background Image
-              Image.network(
-                imageUrl,
-                height: 220,
-                width: 180,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    height: 220,
-                    width: 180,
-                    color: Colors.grey[300],
-                    child: Icon(
-                      Icons.image_not_supported,
-                      size: 50,
-                      color: Colors.grey[500],
-                    ),
-                  );
-                },
-              ),
-
-              // Gradient Overlay
-              Container(
-                height: 220,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [Colors.transparent, Colors.black.withOpacity(0.7)],
-                    stops: const [0.5, 1.0],
+              // Image Container - Adjusted height
+              SizedBox(
+                width: 178, // Match container width
+                height: 126, // Reduced to fit in 218px total
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(19),
+                    topRight: Radius.circular(19),
                   ),
-                ),
-              ),
-
-              // Days Badge (Top Right)
-              Positioned(
-                top: 8,
-                right: 8,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.shade600,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    '${package.daysCountInt}D',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-
-              // Trending Badge (Top Left) - if applicable
-              if (package.isTrending)
-                Positioned(
-                  top: 8,
-                  left: 8,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.orange.shade600,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Text(
-                      'TRENDING',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 9,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-
-              // Discount Badge (Top Left) - if applicable and not trending
-              if (package.hasDiscount && !package.isTrending)
-                Positioned(
-                  top: 8,
-                  left: 8,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.red.shade600,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      '${((1 - package.discountPriceValue / package.priceValue) * 100).toInt()}% OFF',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-
-              // Package Title and Price (Bottom)
-              Positioned(
-                bottom: 0,
-                left: 0,
-                right: 0,
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
+                  child: Stack(
+                    fit: StackFit.expand,
                     children: [
-                      // Package Name
-                      Text(
-                        package.packageName,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
+                      // Background Image
+                      Image.network(
+                        imageUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [Colors.grey[300]!, Colors.grey[400]!],
+                              ),
+                            ),
+                            child: Icon(
+                              Icons.image_not_supported,
+                              size: 35, // Smaller icon
+                              color: Colors.grey[600],
+                            ),
+                          );
+                        },
+                      ),
+
+                      // Trending Badge (Top Left)
+                      if (package.isTrending)
+                        Positioned(
+                          top: 6,
+                          left: 6,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 5,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.orange.shade500,
+                                  Colors.orange.shade700,
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Text(
+                              'TRENDING',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 6,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
 
-                      // Location
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.location_on,
-                            size: 12,
-                            color: Colors.white70,
+                      // Days Badge (Top Right)
+                      Positioned(
+                        top: 6,
+                        right: 6,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 3,
                           ),
-                          const SizedBox(width: 2),
-                          Expanded(
-                            child: Text(
-                              package.locations,
-                              style: const TextStyle(
-                                color: Colors.white70,
-                                fontSize: 11,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.8),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.3),
+                              width: 0.5,
                             ),
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-
-                      // Price
-                      Row(
-                        children: [
-                          if (package.hasDiscount)
-                            Text(
-                              '₹${package.packagePrice}',
-                              style: const TextStyle(
-                                color: Colors.white60,
-                                fontSize: 11,
-                                decoration: TextDecoration.lineThrough,
-                              ),
-                            ),
-                          if (package.hasDiscount) const SizedBox(width: 6),
-                          Text(
-                            '₹${package.hasDiscount ? package.discountPrice : package.packagePrice}',
+                          child: Text(
+                            '${package.daysCountInt} Days',
                             style: const TextStyle(
                               color: Colors.white,
-                              fontSize: 14,
+                              fontSize: 8,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                        ],
+                        ),
                       ),
                     ],
                   ),
                 ),
               ),
 
-              // "View Details" overlay on tap hint
-              Positioned(
-                bottom: 8,
-                right: 8,
-                child: Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.9),
-                    shape: BoxShape.circle,
+              // Separation Line - Reduced height
+              Container(
+                width: 178,
+                height: 1, // Reduced from 2 to 1
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.grey.shade300,
+                      Colors.grey.shade200,
+                      Colors.grey.shade300,
+                    ],
                   ),
-                  child: Icon(
-                    Icons.arrow_forward,
-                    size: 16,
-                    color: Colors.blue.shade600,
+                ),
+              ),
+
+              // Bottom Container - Flexible to fill remaining space
+              Expanded(
+                // Use Expanded to fill remaining space
+                child: Container(
+                  width: 178,
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(19),
+                      bottomRight: Radius.circular(19),
+                    ),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(8), // Reduced padding
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Package Name - Constrained height
+                        SizedBox(
+                          height: 14, // Fixed height
+                          child: Text(
+                            package.packageName,
+                            style: TextStyle(
+                              color: Colors.grey.shade800,
+                              fontSize: 14, // Smaller font
+                              fontWeight: FontWeight.bold,
+                              height: 1.0,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        // Location Row - Constrained height
+                        SizedBox(
+                          height: 12, // Smaller height
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(1),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.shade50,
+                                  borderRadius: BorderRadius.circular(2),
+                                ),
+                                child: Icon(
+                                  Icons.location_on,
+                                  size: 10, // Smaller icon
+                                  color: Colors.blue.shade600,
+                                ),
+                              ),
+                              const SizedBox(width: 2),
+                              Expanded(
+                                child: Text(
+                                  package.locations,
+                                  style: TextStyle(
+                                    color: Colors.grey.shade600,
+                                    fontSize: 10, // Smaller font
+                                    fontWeight: FontWeight.w500,
+                                    height: 1.0,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        // Price and Arrow Row - Flexible height
+                        Expanded(
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              // Price Column - Flexible width
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (package.hasDiscount)
+                                      Text(
+                                        '₹${package.packagePrice}',
+                                        style: TextStyle(
+                                          color: Colors.grey.shade500,
+                                          fontSize: 12, // Very small font
+                                          decoration:
+                                              TextDecoration.lineThrough,
+                                          decorationColor: Colors.red.shade400,
+                                          height: 1.0,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    Text(
+                                      '₹${package.hasDiscount ? package.discountPrice : package.packagePrice}',
+                                      style: TextStyle(
+                                        color: Colors.green.shade700,
+                                        fontSize: 16, // Smaller font
+                                        fontWeight: FontWeight.bold,
+                                        height: 1.0,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              // Small gap
+                              const SizedBox(width: 4),
+
+                              // Arrow Button - Smaller size
+                              Container(
+                                width: 27, // Smaller
+                                height: 27, // Smaller
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Colors.blue.shade500,
+                                      Colors.blue.shade700,
+                                    ],
+                                  ),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.arrow_forward,
+                                  size: 14, // Smaller icon
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -2601,6 +3246,8 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
       ),
     );
   }
+
+  // ...existing code...
 
   Widget _buildNavItem(
     IconData icon,
@@ -2847,53 +3494,72 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
   }
 
   // Events tab content
-  Widget _buildPackagesContent() {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Travel Packages',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0,
+ Widget _buildPackagesContent() {
+  return Scaffold(
+    appBar: AppBar(
+      title: const Text(
+        'Travel Packages',
+        style: TextStyle(fontWeight: FontWeight.bold),
       ),
-      body: _packages.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.card_travel,
-                    size: 80,
-                    color: Colors.grey.shade400,
+      centerTitle: true,
+      backgroundColor: Colors.white,
+      foregroundColor: Colors.black,
+      elevation: 0,
+    ),
+    body: _packages.isEmpty
+        ? Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.card_travel,
+                  size: 80,
+                  color: Colors.grey.shade400,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'No packages available',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey.shade700,
                   ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'No packages available',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey.shade700,
-                    ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Check back later for exciting travel packages',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey.shade600,
                   ),
-                ],
-              ),
-            )
-          : ListView.builder(
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: () {
+                    // Refresh packages
+                    _fetchPackages();
+                  },
+                  child: const Text('Refresh'),
+                ),
+              ],
+            ),
+          )
+        : RefreshIndicator(
+            onRefresh: _fetchPackages,
+            child: ListView.builder(
               padding: const EdgeInsets.all(12),
               itemCount: _packages.length,
               itemBuilder: (context, index) {
                 final package = _packages[index];
                 return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  padding: const EdgeInsets.symmetric(vertical: 6.0), // Reduced spacing
                   child: _buildDynamicPackageCard(package),
                 );
               },
             ),
-    );
-  }
+          ),
+  );
+}
 
   Widget _buildEventCard(String title, String location, String imageUrl) {
     return Card(
@@ -3181,24 +3847,29 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
 
     return Card(
       elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ), // Reduced from 24
       clipBehavior: Clip.antiAlias,
       child: Stack(
         children: [
-          // Background image
+          // Background image - REDUCED HEIGHT
           SizedBox(
-            height: 260,
+            height: 160, // Reduced from 260 to 160
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(16), // Reduced from 24
               child: Image.network(
                 itinerary.image,
-                height: 260,
+                height: 160, // Reduced from 260
                 width: double.infinity,
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
                   return Container(
                     color: Colors.grey[300],
-                    child: const Icon(Icons.image_not_supported, size: 50),
+                    child: const Icon(
+                      Icons.image_not_supported,
+                      size: 35,
+                    ), // Reduced icon size
                   );
                 },
               ),
@@ -3206,9 +3877,9 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
           ),
           // Overlay
           Container(
-            height: 260,
+            height: 160, // Reduced from 260
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(16), // Reduced from 24
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
@@ -3219,56 +3890,50 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
               ),
             ),
           ),
-          // Heart icon
-          // Positioned(
-          //   top: 16,
-          //   right: 16,
-          //   child: Container(
-          //     decoration: BoxDecoration(
-          //       color: Colors.white.withOpacity(0.7),
-          //       shape: BoxShape.circle,
-          //     ),
-          //     child: IconButton(
-          //       icon: Icon(Icons.favorite_border, color: Colors.grey.shade700),
-          //       onPressed: () {
-          //         // TODO: Implement favorite functionality
-          //       },
-          //     ),
-          //   ),
-          // ),
-          // Rating badge
+          // Rating badge - SMALLER
           if (itinerary.rating > 0)
             Positioned(
-              top: 16,
-              left: 16,
+              top: 8, // Reduced from 16
+              left: 8, // Reduced from 16
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 6,
+                  vertical: 2,
+                ), // Reduced padding
                 decoration: BoxDecoration(
                   color: Colors.black.withOpacity(0.6),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(8), // Reduced from 12
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.star, color: Colors.amber, size: 16),
-                    const SizedBox(width: 4),
+                    const Icon(
+                      Icons.star,
+                      color: Colors.amber,
+                      size: 12,
+                    ), // Reduced from 16
+                    const SizedBox(width: 2), // Reduced from 4
                     Text(
                       itinerary.rating.toString(),
-                      style: const TextStyle(color: Colors.white, fontSize: 12),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                      ), // Reduced from 12
                     ),
                   ],
                 ),
               ),
             ),
-          // Card content
+          // Card content - COMPACT VERSION
           Positioned(
-            left: 20,
-            right: 20,
-            bottom: 20,
+            left: 12, // Reduced from 20
+            right: 12, // Reduced from 20
+            bottom: 12, // Reduced from 20
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                // Title and duration
+                // Title and duration - COMPACT
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -3276,86 +3941,105 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
                       child: Text(
                         itinerary.title,
                         style: const TextStyle(
-                          fontSize: 20,
+                          fontSize: 14, // Reduced from 18
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
+                    const SizedBox(width: 6), // Reduced from 8
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
+                        horizontal: 6, // Reduced from 10
+                        vertical: 2, // Reduced from 4
                       ),
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.25),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(
+                          8,
+                        ), // Reduced from 12
                       ),
                       child: Text(
                         '${totalDays}D',
                         style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                          fontSize: 11, // Reduced from 14
                         ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 6),
-                // Destination
+                const SizedBox(height: 2), // Reduced from 4
+                // Destination - COMPACT
                 Text(
                   itinerary.destination,
                   style: TextStyle(
                     color: Colors.white.withOpacity(0.9),
-                    fontSize: 16,
+                    fontSize: 11, // Reduced from 14
                     fontWeight: FontWeight.w600,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 6),
-                // Description
+                const SizedBox(height: 2), // Reduced from 4
+                // Description - COMPACT
                 Text(
-                  itinerary.desc.length > 100
-                      ? '${itinerary.desc.substring(0, 100)}...'
+                  itinerary.desc.length >
+                          50 // Reduced from 80
+                      ? '${itinerary.desc.substring(0, 50)}...'
                       : itinerary.desc,
                   style: TextStyle(
                     color: Colors.white.withOpacity(0.8),
-                    fontSize: 14,
+                    fontSize: 10, // Reduced from 12
+                  ),
+                  maxLines: 1, // Reduced from 2
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4), // Reduced from 8
+                // Tags - COMPACT
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      if (itinerary.rating > 0) ...[
+                        _buildCompactTag('${itinerary.rating}.0'),
+                        const SizedBox(width: 4), // Reduced from 6
+                      ],
+                      _buildCompactTag('${totalDays} Days'),
+                      const SizedBox(width: 4), // Reduced from 6
+                      if (totalDays >= 3) _buildCompactTag('Complete'),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 12),
-                // Tags
-                Row(
-                  children: [
-                    if (itinerary.rating > 0)
-                      _buildTag(Icons.star, '${itinerary.rating}.0'),
-                    if (itinerary.rating > 0) const SizedBox(width: 8),
-                    _buildTag(null, '${totalDays} Days'),
-                    const SizedBox(width: 8),
-                    if (totalDays >= 3) _buildTag(null, 'Complete Package'),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                // Plan Your Trip button
+                const SizedBox(height: 6), // Reduced from 12
+                // Plan Your Trip button - COMPACT
                 SizedBox(
                   width: double.infinity,
+                  height: 32, // Reduced from 44
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color.fromARGB(142, 255, 255, 255),
                       foregroundColor: Colors.black,
                       elevation: 0,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(
+                          8,
+                        ), // Reduced from 12
                       ),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 6,
+                      ), // Reduced from 10
                     ),
                     onPressed: () {
-                      // Navigate to itinerary steps page instead of package detail
+                      // Navigate to the intermediate planning page first
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) =>
-                              DynamicItineraryStepsPage(itinerary: itinerary),
+                              DynamicTravelPlanningPage(itinerary: itinerary),
                         ),
                       );
                     },
@@ -3364,7 +4048,7 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color: Color.fromARGB(255, 255, 255, 255),
-                        fontSize: 16,
+                        fontSize: 11, // Reduced from 14
                       ),
                     ),
                   ),
@@ -3373,6 +4057,28 @@ class _TravelStoriesPageState extends State<TravelStoriesPage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // ADD this new compact tag method
+  Widget _buildCompactTag(String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 4,
+        vertical: 2,
+      ), // Much smaller padding
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.18),
+        borderRadius: BorderRadius.circular(6), // Smaller radius
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 9, // Much smaller font
+          fontWeight: FontWeight.w500,
+        ),
       ),
     );
   }
@@ -3661,7 +4367,120 @@ class DynamicItineraryStepsPage extends StatefulWidget {
 
 class _DynamicItineraryStepsPageState extends State<DynamicItineraryStepsPage> {
   int _currentStep = 0;
-  final PageController _pageController = PageController();
+  late PageController _pageController;
+
+  @override
+  void initState() {
+    super.initState();
+    // Start from page 1 (first day), with page 0 being the planning overview
+    _pageController = PageController(initialPage: 1);
+    _currentStep = 0; // This represents the first day (Day 1)
+  }
+
+  String _getDayBackgroundImage(int currentDay, int totalDays) {
+    final List<String> dayImages = [
+      'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800', // Day 1 - Mountain sunrise
+      'https://images.unsplash.com/photo-1501594907352-04cda38ebc29?w=800', // Day 2 - Beach
+      'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=800', // Day 3 - Landscape
+      'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800', // Day 4 - Mountain
+      'https://images.unsplash.com/photo-1439066615861-d1af74d74000?w=800', // Day 5 - Lake
+      'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=800', // Day 6 - Desert
+      'https://images.unsplash.com/photo-1445991842772-097fea258e7b?w=800', // Day 7+ - Forest
+    ];
+
+    if (currentDay < dayImages.length) {
+      return dayImages[currentDay];
+    } else {
+      return dayImages.last;
+    }
+  }
+
+  Widget _buildDayCircle(Day day, int index, bool isActive, bool isCurrent) {
+    return GestureDetector(
+      onTap: () {
+        _pageController.animateToPage(
+          index + 1, // Add 1 to account for planning overview page
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+      },
+      child: Container(
+        width: 70,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Day circle with enhanced styling
+            Container(
+              width: 55,
+              height: 55,
+              decoration: BoxDecoration(
+                gradient: isCurrent
+                    ? LinearGradient(
+                        colors: [
+                          Colors.deepPurple.shade400,
+                          Colors.deepPurple.shade600,
+                        ],
+                      )
+                    : isActive
+                    ? LinearGradient(
+                        colors: [
+                          Colors.deepPurple.shade200,
+                          Colors.deepPurple.shade400,
+                        ],
+                      )
+                    : null,
+                color: !isActive ? Colors.white.withOpacity(0.3) : null,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: isCurrent
+                      ? Colors.white
+                      : isActive
+                      ? Colors.deepPurple.shade200
+                      : Colors.white.withOpacity(0.5),
+                  width: isCurrent ? 3 : 2,
+                ),
+                boxShadow: isCurrent
+                    ? [
+                        BoxShadow(
+                          color: Colors.deepPurple.withOpacity(0.4),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ]
+                    : [],
+              ),
+              child: Center(
+                child: Text(
+                  day.day.toString(),
+                  style: TextStyle(
+                    color: isActive
+                        ? Colors.white
+                        : Colors.white.withOpacity(0.7),
+                    fontWeight: FontWeight.bold,
+                    fontSize: isCurrent ? 20 : 18,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            // Day label
+            Text(
+              'Day ${day.day}',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: isCurrent
+                    ? Colors.white
+                    : isActive
+                    ? Colors.white.withOpacity(0.9)
+                    : Colors.white.withOpacity(0.6),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   IconData _getIconForActivity(String iconName) {
     switch (iconName.toLowerCase()) {
@@ -3689,6 +4508,8 @@ class _DynamicItineraryStepsPageState extends State<DynamicItineraryStepsPage> {
   @override
   Widget build(BuildContext context) {
     final days = widget.itinerary.days;
+    // Total pages: 1 (planning overview) + days.length + 1 (back to planning)
+    final totalPages = days.length + 2;
 
     return Scaffold(
       appBar: AppBar(
@@ -3697,6 +4518,15 @@ class _DynamicItineraryStepsPageState extends State<DynamicItineraryStepsPage> {
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.list_alt),
+            onPressed: () {
+              // Quick navigation back to planning page
+              Navigator.pop(context);
+            },
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -3706,16 +4536,136 @@ class _DynamicItineraryStepsPageState extends State<DynamicItineraryStepsPage> {
           Expanded(
             child: PageView.builder(
               controller: _pageController,
-              itemCount: days.length,
+              itemCount: totalPages,
               onPageChanged: (index) {
-                setState(() {
-                  _currentStep = index;
-                });
+                if (index == 0) {
+                  // Swiped back before Day 1 - return to planning page
+                  Navigator.pop(context);
+                } else if (index == totalPages - 1) {
+                  // Swiped past last day - return to planning page
+                  Navigator.pop(context);
+                } else {
+                  // Regular day navigation
+                  setState(() {
+                    _currentStep = index - 1; // Adjust for planning page offset
+                  });
+                }
               },
               itemBuilder: (context, index) {
-                final day = days[index];
-                return _buildDayContent(day);
+                if (index == 0) {
+                  // Planning overview page (before Day 1)
+                  return _buildPlanningOverview();
+                } else if (index == totalPages - 1) {
+                  // Planning overview page (after last day)
+                  return _buildPlanningOverview();
+                } else {
+                  // Regular day content
+                  final day =
+                      days[index - 1]; // Adjust for planning page offset
+                  return _buildDayContent(day);
+                }
               },
+            ),
+          ),
+          // Navigation indicator
+          _buildNavigationIndicator(days.length),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNavigationIndicator(int totalDays) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.swipe, color: Colors.grey.shade400, size: 20),
+          const SizedBox(width: 8),
+          Text(
+            _currentStep >= 0 && _currentStep < totalDays
+                ? 'Day ${_currentStep + 1} of $totalDays'
+                : 'Swipe to navigate',
+            style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+          ),
+          const SizedBox(width: 8),
+          Icon(Icons.swipe, color: Colors.grey.shade400, size: 20),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPlanningOverview() {
+    return Container(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.blue.shade50,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.arrow_back,
+              size: 50,
+              color: Colors.blue.shade600,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'Return to Planning',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.blue.shade700,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Swipe right to continue exploring days\nor tap to return to planning options',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue.shade600,
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+            ),
+            child: const Text(
+              'Back to Planning',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          // Quick navigation chips
+          Wrap(
+            spacing: 8,
+            children: List.generate(
+              widget.itinerary.days.length,
+              (index) => ActionChip(
+                label: Text('Day ${index + 1}'),
+                onPressed: () {
+                  _pageController.animateToPage(
+                    index + 1,
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                  );
+                },
+                backgroundColor: Colors.blue.shade100,
+              ),
             ),
           ),
         ],
@@ -3724,73 +4674,96 @@ class _DynamicItineraryStepsPageState extends State<DynamicItineraryStepsPage> {
   }
 
   Widget _buildStepperHeader(List<Day> days) {
-    return SizedBox(
-      height: 80,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: days.length,
-        itemBuilder: (context, index) {
-          final day = days[index];
-          final isActive = index <= _currentStep;
-          final isCurrent = index == _currentStep;
-
-          return GestureDetector(
-            onTap: () {
-              _pageController.animateToPage(
-                index,
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeInOut,
-              );
-            },
-            child: Container(
-              width: 80,
-              margin: const EdgeInsets.only(right: 8),
-              child: Column(
-                children: [
-                  Container(
-                    width: 50,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: isCurrent
-                          ? Colors.deepPurple
-                          : isActive
-                          ? Colors.deepPurple.shade300
-                          : Colors.grey.shade200,
-                      shape: BoxShape.circle,
-                      border: isCurrent
-                          ? Border.all(color: Colors.deepPurple, width: 3)
-                          : null,
-                    ),
-                    child: Center(
-                      child: Text(
-                        day.day.toString(),
-                        style: TextStyle(
-                          color: isActive ? Colors.white : Colors.grey,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Day ${day.day}',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: isCurrent
-                          ? Colors.deepPurple
-                          : isActive
-                          ? Colors.deepPurple.shade300
-                          : Colors.grey,
-                    ),
-                  ),
-                ],
+    return Container(
+      height: 120,
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        image: DecorationImage(
+          image: NetworkImage(
+            _getDayBackgroundImage(_currentStep, days.length),
+          ),
+          fit: BoxFit.cover,
+          colorFilter: ColorFilter.mode(
+            Colors.black.withOpacity(0.3),
+            BlendMode.darken,
+          ),
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.black.withOpacity(0.1),
+              Colors.black.withOpacity(0.4),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(24),
+        ),
+        child: Column(
+          children: [
+            // Current day info overlay
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+              child: Text(
+                days.isNotEmpty
+                    ? 'Day ${_currentStep + 1} of ${days.length}'
+                    : 'Itinerary Overview',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
-          );
-        },
+
+            // Day circles section
+            Expanded(
+              child: Center(
+                child: SizedBox(
+                  height: 80,
+                  child: days.length == 1
+                      ? Center(child: _buildDayCircle(days[0], 0, true, true))
+                      : ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          padding: EdgeInsets.symmetric(
+                            horizontal: days.length <= 3
+                                ? (MediaQuery.of(context).size.width -
+                                          (days.length * 80)) /
+                                      2
+                                : 16,
+                          ),
+                          itemCount: days.length,
+                          itemBuilder: (context, index) {
+                            final day = days[index];
+                            final isActive = index <= _currentStep;
+                            final isCurrent = index == _currentStep;
+
+                            return Container(
+                              margin: const EdgeInsets.only(right: 16),
+                              child: _buildDayCircle(
+                                day,
+                                index,
+                                isActive,
+                                isCurrent,
+                              ),
+                            );
+                          },
+                        ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -3801,18 +4774,35 @@ class _DynamicItineraryStepsPageState extends State<DynamicItineraryStepsPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Day ${day.day}',
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.deepPurple,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '${day.activities.length} activities planned',
-            style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Day ${day.day}',
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.deepPurple,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.deepPurple.shade50,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  '${day.activities.length} activities',
+                  style: TextStyle(
+                    color: Colors.deepPurple.shade700,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 20),
           Expanded(
@@ -3832,6 +4822,14 @@ class _DynamicItineraryStepsPageState extends State<DynamicItineraryStepsPage> {
                           style: TextStyle(
                             color: Colors.grey.shade600,
                             fontSize: 16,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          "Swipe to explore other days",
+                          style: TextStyle(
+                            color: Colors.grey.shade500,
+                            fontSize: 14,
                           ),
                         ),
                       ],
@@ -3864,7 +4862,7 @@ class _DynamicItineraryStepsPageState extends State<DynamicItineraryStepsPage> {
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Icon(
-                              _getIconForActivity(activity.icon),
+                              _getActivityIcon(activity.icon),
                               color: Colors.deepPurple,
                               size: 24,
                             ),
@@ -3881,14 +4879,25 @@ class _DynamicItineraryStepsPageState extends State<DynamicItineraryStepsPage> {
                             children: [
                               const SizedBox(height: 4),
                               if (activity.time.isNotEmpty)
-                                Text(
-                                  'Time: ${activity.time}',
-                                  style: TextStyle(
-                                    color: Colors.blue.shade700,
-                                    fontWeight: FontWeight.w500,
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue.shade50,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    activity.time,
+                                    style: TextStyle(
+                                      color: Colors.blue.shade700,
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 12,
+                                    ),
                                   ),
                                 ),
-                              const SizedBox(height: 4),
+                              const SizedBox(height: 8),
                               Text(
                                 activity.description,
                                 style: TextStyle(
@@ -3898,22 +4907,40 @@ class _DynamicItineraryStepsPageState extends State<DynamicItineraryStepsPage> {
                               ),
                             ],
                           ),
+                          // REPLACE the numbered trailing container with image button
                           trailing: Container(
-                            width: 30,
-                            height: 30,
+                            width: 40,
+                            height: 40,
                             decoration: BoxDecoration(
-                              color: Colors.green.shade100,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Center(
-                              child: Text(
-                                '${index + 1}',
-                                style: TextStyle(
-                                  color: Colors.green.shade700,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12,
-                                ),
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.blue.shade400,
+                                  Colors.blue.shade600,
+                                ],
                               ),
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.blue.withOpacity(0.3),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: IconButton(
+                              icon: const Icon(
+                                Icons.photo_library,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                              onPressed: () {
+                                _showActivityImageSlideshow(
+                                  context,
+                                  activity,
+                                  day.day,
+                                  index,
+                                );
+                              },
                             ),
                           ),
                         ),
@@ -3924,6 +4951,511 @@ class _DynamicItineraryStepsPageState extends State<DynamicItineraryStepsPage> {
         ],
       ),
     );
+  }
+
+  IconData _getActivityIcon(String iconName) {
+    switch (iconName.toLowerCase()) {
+      case 'coffee':
+        return Icons.local_cafe;
+      case 'landmark':
+        return Icons.account_balance;
+      case 'food':
+        return Icons.restaurant;
+      case 'hotel':
+        return Icons.hotel;
+      case 'transport':
+        return Icons.directions_car;
+      case 'activity':
+        return Icons.local_activity;
+      case 'shopping':
+        return Icons.shopping_bag;
+      case 'sightseeing':
+        return Icons.camera_alt;
+      default:
+        return Icons.event;
+    }
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+}
+
+// ADD this new method to show the image slideshow popup
+void _showActivityImageSlideshow(
+  BuildContext context,
+  Activity activity,
+  int dayNumber,
+  int activityIndex,
+) {
+  // Generate sample images for the activity (you can replace with actual activity images)
+  final List<String> activityImages = _getActivityImages(
+    activity.icon,
+    activityIndex,
+  );
+
+  showDialog(
+    context: context,
+    barrierDismissible: true,
+    builder: (BuildContext context) {
+      return Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.all(16),
+        child: ActivityImageSlideshow(
+          images: activityImages,
+          activity: activity,
+          dayNumber: dayNumber,
+          activityIndex: activityIndex,
+        ),
+      );
+    },
+  );
+}
+
+// ADD this helper method to get activity-specific images
+List<String> _getActivityImages(String activityIcon, int index) {
+  // Base images for different activity types
+  final Map<String, List<String>> activityImageMap = {
+    'food': [
+      'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=800', // Restaurant
+      'https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=800', // Food plate
+      'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800', // Restaurant interior
+    ],
+    'hotel': [
+      'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800', // Hotel room
+      'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800', // Hotel lobby
+      'https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=800', // Hotel exterior
+    ],
+    'transport': [
+      'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=800', // Car
+      'https://images.unsplash.com/photo-1570125909232-eb263c188f7e?w=800', // Bus
+      'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=800', // Travel transport
+    ],
+    'sightseeing': [
+      'https://images.unsplash.com/photo-1539650116574-75c0c6d73aff?w=800', // Monument
+      'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=800', // Landmark
+      'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800', // Scenic view
+    ],
+    'activity': [
+      'https://images.unsplash.com/photo-1551524164-6cf64ac315f6?w=800', // Adventure
+      'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=800', // Outdoor activity
+      'https://images.unsplash.com/photo-1482192505345-5655af888cc4?w=800', // Group activity
+    ],
+    'shopping': [
+      'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800', // Shopping street
+      'https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=800', // Market
+      'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=800', // Shopping mall
+    ],
+  };
+
+  // Get images based on activity icon, with fallback
+  List<String> baseImages =
+      activityImageMap[activityIcon.toLowerCase()] ??
+      [
+        'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800',
+        'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800',
+        'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800',
+      ];
+
+  return baseImages;
+}
+
+// ADD this new StatefulWidget for the image slideshow
+class ActivityImageSlideshow extends StatefulWidget {
+  final List<String> images;
+  final Activity activity;
+  final int dayNumber;
+  final int activityIndex;
+
+  const ActivityImageSlideshow({
+    Key? key,
+    required this.images,
+    required this.activity,
+    required this.dayNumber,
+    required this.activityIndex,
+  }) : super(key: key);
+
+  @override
+  State<ActivityImageSlideshow> createState() => _ActivityImageSlideshowState();
+}
+
+class _ActivityImageSlideshowState extends State<ActivityImageSlideshow> {
+  late PageController _pageController;
+  int _currentImageIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.8,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Header with close button
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.deepPurple.shade50,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.deepPurple.shade100,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    _getActivityIcon(widget.activity.icon),
+                    color: Colors.deepPurple,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.activity.title,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.deepPurple,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        'Day ${widget.dayNumber} • Activity ${widget.activityIndex + 1}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.deepPurple.shade600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: const Icon(Icons.close, color: Colors.deepPurple),
+                ),
+              ],
+            ),
+          ),
+
+          // Image slideshow
+          Container(
+            height: 300,
+            child: Stack(
+              children: [
+                PageView.builder(
+                  controller: _pageController,
+                  onPageChanged: (index) {
+                    setState(() {
+                      _currentImageIndex = index;
+                    });
+                  },
+                  itemCount: widget.images.length,
+                  itemBuilder: (context, index) {
+                    return Container(
+                      margin: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.network(
+                          widget.images[index],
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              color: Colors.grey[300],
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.image_not_supported,
+                                    size: 50,
+                                    color: Colors.grey[500],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Image not available',
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Container(
+                              color: Colors.grey[200],
+                              child: Center(
+                                child: CircularProgressIndicator(
+                                  value:
+                                      loadingProgress.expectedTotalBytes != null
+                                      ? loadingProgress.cumulativeBytesLoaded /
+                                            loadingProgress.expectedTotalBytes!
+                                      : null,
+                                  color: Colors.deepPurple,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    );
+                  },
+                ),
+
+                // Navigation arrows (only show if more than 1 image)
+                if (widget.images.length > 1) ...[
+                  // Left arrow
+                  Positioned(
+                    left: 16,
+                    top: 0,
+                    bottom: 0,
+                    child: Center(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.5),
+                          shape: BoxShape.circle,
+                        ),
+                        child: IconButton(
+                          onPressed: _currentImageIndex > 0
+                              ? () {
+                                  _pageController.previousPage(
+                                    duration: const Duration(milliseconds: 300),
+                                    curve: Curves.easeInOut,
+                                  );
+                                }
+                              : null,
+                          icon: Icon(
+                            Icons.arrow_back_ios,
+                            color: _currentImageIndex > 0
+                                ? Colors.white
+                                : Colors.grey,
+                            size: 20,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // Right arrow
+                  Positioned(
+                    right: 16,
+                    top: 0,
+                    bottom: 0,
+                    child: Center(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.5),
+                          shape: BoxShape.circle,
+                        ),
+                        child: IconButton(
+                          onPressed:
+                              _currentImageIndex < widget.images.length - 1
+                              ? () {
+                                  _pageController.nextPage(
+                                    duration: const Duration(milliseconds: 300),
+                                    curve: Curves.easeInOut,
+                                  );
+                                }
+                              : null,
+                          icon: Icon(
+                            Icons.arrow_forward_ios,
+                            color: _currentImageIndex < widget.images.length - 1
+                                ? Colors.white
+                                : Colors.grey,
+                            size: 20,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+
+                // Image counter
+                if (widget.images.length > 1)
+                  Positioned(
+                    bottom: 16,
+                    left: 0,
+                    right: 0,
+                    child: Center(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.7),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          '${_currentImageIndex + 1} / ${widget.images.length}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+
+          // Activity details section
+          Container(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Time badge
+                if (widget.activity.time.isNotEmpty)
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade50,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.blue.shade200),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.access_time,
+                          color: Colors.blue.shade700,
+                          size: 16,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          widget.activity.time,
+                          style: TextStyle(
+                            color: Colors.blue.shade700,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                // Description
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey.shade200),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.description,
+                            color: Colors.grey.shade600,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Description',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey.shade700,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        widget.activity.description,
+                        style: TextStyle(
+                          color: Colors.grey.shade700,
+                          fontSize: 14,
+                          height: 1.4,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Helper method to get activity icon (same as existing method)
+  IconData _getActivityIcon(String iconName) {
+    switch (iconName.toLowerCase()) {
+      case 'coffee':
+        return Icons.local_cafe;
+      case 'landmark':
+        return Icons.account_balance;
+      case 'food':
+        return Icons.restaurant;
+      case 'hotel':
+        return Icons.hotel;
+      case 'transport':
+        return Icons.directions_car;
+      case 'activity':
+        return Icons.local_activity;
+      case 'shopping':
+        return Icons.shopping_bag;
+      case 'sightseeing':
+        return Icons.camera_alt;
+      default:
+        return Icons.event;
+    }
   }
 }
 
